@@ -1,0 +1,224 @@
+---
+title: "test4"
+output: html_document
+date: "2022-12-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pregunta 1 (hecho)
+
+Varias universidades de prestigio requieren de un examen de ingreso. Para afrontar dichos exámenes, algunas academias ofrecen cursos de preparación. Para comprobar su efectividad, decides realizar el siguiente experimento. Reclutas a 24 individuos y les haces un examen similar a los exámenes de ingreso típicos. Los alumnos asisten entonces al curso de preparación en la academia y, tras su finalización, hacen otro examen de ingreso. Se dessea comprobar si existe evidencia de que el curso es efectivo. ¿Cuáles son el p-valor y el tamaño del efecto de este test? Datos en course.csv
+
+	
+a) (p-valor, efecto) = (0.592623, 0.155567)
+b) (p-valor, efecto) = (0.296311, 0.155567)
+c) (p-valor, efecto) = (0.121573, 0.328142)
+d) (p-valor, efecto) = (0.06078672, 0.32814249) SOLUCIÓN
+
+
+```{r}
+#DATOS APAREADOS
+source("utils.R")
+library(readr)
+course <- read_csv("course.csv")
+
+#1) Formular hipótesis
+  #H0: mu_notaDespues <= mu_notaAntes
+  #Ha: mu_notaDespues > mu_notaAntes = mu_notaDespues - mu_notaAntes > 0
+
+#2) Discutir asunciones:
+  #Independencia muestras (población infinita)
+  #Normalidad poblaciones:
+
+  diff_notas = course$after_training - course$before_training
+  hist(diff_notas)
+
+
+#3)Estadístico (T de Student)
+  #Ha: mu_notaDespues - mu_notaAntes > 0
+  my_test = t.test(diff_notas, alternative = "greater", mu = 0)
+  my_test
+
+#4) Tamaño del efecto
+library("effectsize")
+effectsize(my_test)
+
+print("EL tamaño del efecto es pequeño, se recomienda realizar más pruebas")
+```
+
+## Pregunta 2
+
+Una empresa industrial fabrica cierta pieza con una longitud media de 100 cm. El proceso es bastante preciso. Esto es, la longitud de estas piezas tiene una desviación estándar muy pequeña, siendo esta de 3 cms. El equipo de I+D de la empresa ha propuesto un nuevo método de producción de la pieza. Sin embargo, implementar el nuevo método conlleva ciertos costes asociados a la modificación del proceso industrial. Por tanto, el nuevo proceso solo se implementará si hay pruebas sólidas de que la desviación estándar del nuevo método es al menos la mitad que la del proceso de fabricación actual. Para testear esto, se fabrican 20 piezas con el nuevo método y se obtiene una media de 99.8 cm y una desviación estándar de 1.2 cm. ¿P-valor del test?
+
+		
+0.290196
+0.1213272
+0.000012
+0.242654
+
+```{r}
+# Método A: media=100, desv = 3
+# Método B: media = 99.8 desv = 1.2cm  20 piezas
+# Suponer que tienen una distribución normal 
+# COMPARACIÓN DE VARIANZAS --> F de Snedecor
+
+#Asunciones 
+
+#Estandarización simulaciones:
+simsA = rnorm(20, mean=100, sd=3)
+simsB= rnorm(20, mean=99.8, sd=1.2)
+
+simsA_z = (simsA - mean(simsA)/sd(simsA) * 3)
+simsB_z = (simsB - mean(simsB)/sd(simsB)* 1.2)
+
+var.test(simsA_z, simsB_z)
+var.test(simsB_z, simsA)
+
+
+
+#-----------------------------------------------------
+
+sims = replicate ( 1000, {
+    simsA = rnorm(100, mean=100, sd=3)
+    simsB= rnorm(20, mean=99.8, sd=1.2)
+    
+    simsA_z = (simsA - mean(simsA)/sd(simsA) * 3)
+    simsB_z = (simsB - mean(simsB)/sd(simsB)* 1.2)
+    
+    var.test(simsA_z, simsB_z)$p.value
+})
+
+mean(sims)
+```
+
+## Pregunta 3 
+Supón que cierta empresa desarrolla un nuevo medicamento, diseñado para prevenir los resfriados. La compañía afirma que el medicamento es más eficaz para las mujeres que para los hombres. Para probar esta afirmación, se elige una muestra aleatoria simple de 300 personas de una población de 100 000 voluntarios.
+
+El fichero colds.txt  recoge qué pacientes sufrieron un resfriado durante el el estudio. Con base en estos datos, queremos saber si se puede concluir que el fármaco es más eficaz para las mujeres que para los hombres. ¿P-valor del test?
+
+		
+0.093565
+0.701944
+0.4532177
+0.546782 SOLUCIÓN
+```{r}
+source("utils.R")
+library(readr)
+colds <- read_table("colds.csv")
+View(colds)
+tabla_resfriados = table(colds)
+  exito_women = tabla_resfriados[1,2]
+  exito_men = tabla_resfriados[2,2]
+  vec_x = c(exito_women, exito_men)
+  
+  prop.test(vec_x, rowSums(tabla_resfriados), alternative = "greater")
+#--------------------------------------------------------------------------
+
+#1) Formular hipótesis
+  #h0: mu_mujeres > mu_hombres (media de falses)
+  #Ha: mu_mujeres <= mu_hombres = mu_mujeres - mu_hombres < 0
+
+  #X: media mujeres true --> B~(n_mujeres, p_true)
+  #Y: media hombre true --> B~(n_hombres, p_true)
+
+  n_mujeres = sum(colds$`"sex"`== "\"female\"")
+  n_hombres = sum(colds$`"sex"`==  "\"male\"" )
+  
+  colds$mujeres = colds$`"sex"`== "\"female\""
+  n_resfriadas = sum((colds$mujeres==TRUE) & (colds$`"cold_during_study"`==TRUE))
+  n_resfriados = sum((colds$mujeres==FALSE) & (colds$`"cold_during_study"`==TRUE))
+  
+  p_a = n_resfriadas/n_mujeres
+  p_o = n_resfriados/n_hombres
+  
+  vector_exitos = c(n_resfriadas, n_resfriados)
+  prop.test(n_resfriadas, n_mujeres, p = p_a)
+  
+  
+  
+
+
+```
+
+
+## Pregunta 4 
+		
+Sobre 182 muestras por grupo
+Sobre 127 muestras por grupo
+Sobre 212 muestras por grupo
+Sobre 91 muestras por grupo
+
+Datos:
+se desea comprobar que varX != varY
+MÉTODO X: var_muestralX = 7 (a partir de 45 muetras)
+MÉTODO :Y var_muestralY = 12 (a partir 60 muestras)
+DEbido a que los resultados no son concluyentes, repites el experimento con el mismo 
+num de muestras (nX = nY), usa simulaciones para calcular las muestras necesarias si 
+se desea un nivel de significación del 1% y una potencia del 85%
+
+```{r}
+
+
+#H0: varx = vary
+#Ha:varX != varY ==> varx - vary != 0 ==> varx/vary != 1
+sims_x = rnorm(45, sd=7)
+  mu_x =mean(sims_x)
+sims_y = rnorm(60, sd = 12)
+   mu_y=mean(sims_y)
+
+
+var.test(sims_x, sims_y, conf.level = 0.99)
+
+n=10000
+nx=45
+ny=60
+sdx=7
+sdy=12
+alpha = 0.01
+potencia = 0.85
+N=100
+sims = function(N){
+  sim = replicate(n,{
+    sims_x = rnorm(N, sd=sdx)
+    sims_y = rnorm(N, sd = sdy)
+    var.test(sims_x, sims_y)$p.value < 0.01
+    
+  })
+  
+  mean(sim)
+}
+sims = Vectorize(sims)
+
+
+
+```
+
+## Pregunta 5 (hecho)
+El fichero births.csv contiene datos sobre nacimientos de bebés, incluido el número de semanas de embarazo (“weeks”). ¿Cuál es el intervalo de confianza al 98% para el número de semanas de gestación?
+
+	
+37.00230, 39.73901
+37.07013, 39.67118
+Los datos no son normales (y además n < 30), por lo que no se puede hacer el análisis
+36.80027, 39.94104 SOLUCION!!!
+
+```{r}
+library(readr)
+births <- read_csv("births.csv")
+n = 300
+#Media muestral con varianza desconocida --> T de student
+
+# 1º) ASUNCIONES
+  # n estudiada <<< Poblacion dirigida
+  hist(births$weeks) #distrib normal 
+  ggplot(births, aes(x = weeks)) + geom_histogram()
+
+# 2º) Ttest:
+   t.test(births$weeks, conf.level=0.98)
+
+
+```
+

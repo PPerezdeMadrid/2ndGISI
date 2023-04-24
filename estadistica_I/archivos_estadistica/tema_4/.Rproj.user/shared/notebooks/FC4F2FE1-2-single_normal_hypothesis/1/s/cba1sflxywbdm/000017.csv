@@ -1,0 +1,8 @@
+"0","  #b) calculamos p-valor: prob de obtener un evento tan o más extremo que el observado
+      #evento observado: 0.037 
+      #más extremo que 0.037--> más a la izq
+       abline(v = 4 - x_mean, col = 2) #tb muy extremo si están a la dcha
+"
+"2","Error in int_abline(a = a, b = b, h = h, v = v, untf = untf, ...) : 
+  plot.new has not been called yet
+"

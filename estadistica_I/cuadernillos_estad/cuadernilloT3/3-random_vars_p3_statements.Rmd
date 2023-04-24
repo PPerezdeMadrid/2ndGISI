@@ -1,0 +1,242 @@
+---
+title: "Variables aleatorias III"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+----
+
+En cierto hospital, un 12\% de los pacientes no acude a su cita. Si un equipo 
+médico es capaz de atender 100 personas en un día, cuál es la probabilidad 
+de que una persona se quede sin atender si se dan 110 citas en un día. ¿Cuántas
+citas se pueden dar sin que dicha probabilidad exceda el 5\%?
+
+```{r}
+#X: "num de pacientes que van a la cita" 
+# VA:
+# n personas con p probabilidades --> binomial
+#X~B(100, 0.88)
+
+#P(X>100) --> cuantil 100
+#= 1-P(X<= 100) = 1 - pbinom(100, 110, 0.88)
+
+prob_110 = 1 - pbinom(100, 110, 0.88)
+prob_110
+
+#__________________________________
+#P(X>100) <= 0.5
+# 1 - pbinom(n, 110, 0.88) = 0.5
+
+hello = function(n = 100:110){
+  paste(1 - pbinom(100, n, 0.88) <= 0.05, n)
+}
+
+hello()
+
+```
+
+
+
+----
+
+De 2000 familias con 4 niños cada una, cuántos te esperarías que tuviesen
+a) al menos 1 niño (masculino) y b) 2 niñas. 
+
+```{r}
+#Al menos un niño --> P(X>1)
+#X: num de niños por familia
+#tope, probabilidad --> binomial X~B
+
+#P(X>1) = 1 - P(X<=0) = 1 -P(x=0) = 1 - dbinom(0, ...)
+
+1-dbinom(0, 4, 0.5)
+
+#-------------
+#Exactamente dos niñas --> P(Y=2)
+#Y: num niñas por familia Y~B(4,0.5)
+#Z: num de familias con dos hijas: B(2000, P(X=2)) !!!!!!
+
+dbinom(2, 4, 0.5)
+
+#resolverlo por simulaciones:
+
+  #Casos totales: 
+   #rbinom(N, 2000, P(X=2))
+
+  #Averiguar p_success:
+N=100
+    n_girls = rbinom(N, 4, 0.5)
+    p_succes =sum(n_girls==2)/N
+    
+    
+casos_totales = rbinom(N, 2000, p_succes)
+mean(casos_totales) #num de familias con 2 hijas
+
+
+
+```
+
+
+----
+
+Un enfermero necesita 10 radiografías de la pierna de un niño. Hay un 70\% de 
+probabilidad de que el niño esté quieto durante la prueba. ¿Cuál es la probabilidad
+de que se necesiten más de 15 pruebas?
+
+```{r}
+#Binomial negativa (r=10, p=0.7)
+#X: num de radiografías
+#?P(X>15) = 1- P(X<=15) 
+1-pnbinom(15, 10, 0.7)
+
+print("preguntar")
+
+```
+
+----
+
+Un informático desea modelar el nº ataques informáticos que su página web
+sufre cada día. Recolecta datos durante 100 días, obteniendo la siguiente
+**tabla de frecuencias**:
+
+|nº de ataques/día   | 0    | 1    | 2   | 3    |
+|:------------------:|:----:|:----:|:---:|:----:|
+|frecuencia          | 45   | 35   |15   | 5    |
+
+¿Probabilidad de que, en un día cualquiera, haya al menos 1 ataque informático?
+
+```{r}
+# Es fácil conseguir la media --> poiss
+
+media = ((0*45)+(1*35)+(2*15)+(3*5))/100
+#Lambda = 0.8
+#X: num ataques por dia
+#P(X>=1)??????????  = 1-P(X=0)
+1-dpois(0,media)
+
+```
+
+
+----
+
+Se tira una moneda hasta que salen 10 caras. A continuación, se meten 10 bolas
+blancas y tantas bolas negras como cruces hayan salido en una urna. Se extraen
+5 bolas de la urna sin reemplazamiento. ¿Cuál es el número más probable de
+bolas blancas y cuál es su probabilidad?
+
+```{r}
+#se tira moneda hasta 10 caras ==> binomial Negativa r=10, p=0.5
+
+# X: num de cruces hasta 10 caras ==> X~B(r=10, p=0.5)
+# Y: num bolas blancas extraídas ==> Y~Hypergeom(10, n, 5)
+
+#QUEREMOS P(Y)
+# marginalizar --> P(Y|X) = P(x,y) / P(X)
+  #P(x,y --> ejemplp
+  x = 2 # dos bolas negras
+  y = 3 # tres bolas blancas
+  
+  #P(y=3, x=2) = P(y=2| x=3) * P(x=3)
+  p_xy = dhyper(x=2, m=10, n=3, 5) * dnbinom(3, 10, 0.5)
+  
+  p_xy = function(x,y){
+    dnbinom(x, 10, 0.5)*dhyper(y, 10, x, 5)
+  }
+  
+  xs= 0:100
+  ys= 0:5
+  tabla_sims = outer(xs,ys, p_xy)
+  tabla_sims
+  rowNames = paste("Y=", ys)
+  #P(Y)
+  p_y = colSums(tabla_sims)
+  tabla = paste(p_y, "Y=", 0:5)
+  
+  max(tabla)
+  
+ 
+  
+```
+
+----
+
+Usa el TCL para demostrar que una distribución Binomial tiende a una distribución
+$$\mathcal{N}(np, \sigma^2=npq)$$ si $n$ es grande. Dibuja ambas distribuciones
+para visualizar la coincidencia.
+
+```{r}
+# ??
+```
+
+----
+
+Usa el TCL para demostrar que una distribución de Poisson tiende a una distribución
+$$\mathcal{N}(\lambda, \sigma^2=\lambda)$$ si $\lambda$ es grande. Dibuja ambas 
+distribuciones para visualizar la coincidencia.
+
+```{r}
+# ??
+```
+
+----
+
+Tres hermanos van a comer a casa de su abuelita. El 99.7\% de las veces, cada hermano
+come una cantidad de comida comprendida entre 1.2 y 1.8 Kg. ¿Cuál
+es la probabilidad de que logren acabar los 5 Kg de carne que su abuela ha preparado?
+
+```{r}
+#DISTRIBUCIÓN NORMAL 
+#X: cantidad comida por los hermanos N(mu= 1.5, var = 0.3)
+# 3 hermanos --> 3 * 1.5 ---> N(mu=4.5, var = 0.3)
+# P(X>5) = 1 - P(X<5) = 1 - pnorm
+1 - pnorm(5, 4.5, 0.3)
+```
+
+----
+
+Has programado un robot asesino para acabar con tu profesor de estadística. El robot
+dispara al centro de su frío corazón, pero comete un error aproximadamente normal
+en cada una de las coordenadas x e y. La media de ambas normales es 0 y tiene desviación
+típica 5 cm. ¿Cuál es la probabilidad de que el disparo acabe a menos de 1 cm del centro
+del corazón? Resuelve por simulaciones.
+
+```{r}
+N=1000
+  x = rnorm(N, 0, 5)
+  y = rnorm(N, 0, 5)
+  sum(sqrt(x*x + y*y)<1)/N
+```
+
+----
+
+Trabajamos para una gran compañía de streaming que quiere hacer sugerencias 
+de películas a sus usuarios. Para hacer esto, hay que intentar caracterizar 
+los gustos de cada usuario. Asumimos que las películas que ve un usuario 
+únicamente dependen de dos rasgos de su caracter: su ``aventurosidad (X)'' y su 
+``romanticismo (Y)''. Asumimos que ambos rasgos se pueden caracterizar con 
+$X\sim \mathbb{U}[0, 1]$ y $Y~\sim\mathbb{U}[0, 1]$ (independientes). Si un 
+usuario tiene  como rasgos $X=x$ e $Y=y$:
+
+
+* La probabilidad de ver una película de acción es $p_a = \frac{2 x - y + 1}{6}$. 
+* La probabilidad de ver una película romántica es $p_r = \frac{3y - 2x + 2}{10}$
+* La probabilidad de ver una película de acción-amor es $p_{ar} = 1 - p_a - p_r$. 
+
+De las últimas 20 películas que ha visto un usuario, 4 han sido de acción,
+4 románticas y 12 de acción-amor. ¿Cuáles son sus rasgos X e Y más probables?
+
+```{r}
+# A: peliculas de acción
+# R: num de películas Románticas# AR: peliculas románticas-accion
+
+#BUscamos una dsitrib q tenga tope: hypergeom, multinom, Binomial
+#Es multinomial 3 ensayos indep--> cada ensayo != num de peliculas 
+# multinomial "prob de sacar 2 6s "
+
+#(A, R, AR)~Multinom(p_a, p_b, p_rm) --> (A, R, AR| x, y)~Multinom(p_a, p_b, p_rm)
+```

@@ -1,0 +1,496 @@
+---
+title: "Práctica 2: Estadística"
+author: Carlos Moragón, Orianna Milone y Paloma Pérez de Madrid
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Objetivos de la práctica
+Esta práctica tiene como principales objetivo aprender a usar `R` para realizar
+los análisis estadísticos más habituales involucrando contrastes de hipótesis
+o intervalos de confianza.
+
+Recuerda escribir las **conclusiones** claramente, de forma 
+que cualquier persona te pueda entender.
+
+
+# Entrega y evaluación 
+El deadline para la entrega de la práctica es el día especificado en la entrega
+del curso virtual. Cualquier trabajo recibido **fuera del plazo contará como no entregado**.
+
+La entrega consistirá, **obligatoriamente, en el fichero de R Markdown con 
+extensión `*.Rmd`  y el resultado de compilarlo (un HTML). ** Ambos ficheros
+deberán entregarse a través del curso virtual.
+
+Las prácticas que no compilen el fichero .Rmd, generando un fichero HTML válido,
+**NO SERÁN EVALUADAS**.
+
+
+
+
+--- 
+
+# Infusión para perder peso
+Un anuncio en la televisión afirma que sin cambiar los hábitos alimenticios
+y tan solo tomando un extracto de hierbas diariamente se *pueden perder 1.5 Kg (¡o más!)*
+*en 5 días.*
+
+Picado por la curiosidad (y un tanto excéptico), decides probar esta afirmación
+sometiendo a 12 de tus compañeros a un experimento. Para realizar el experimento, 
+pesas a cada uno de tus compañeros, les pides que usen el extracto de hierbas 
+durante 5 días y luego los vuelves a pesar. Los datos se han guardado en 
+"weights.csv".
+
+### 1) Carga y prepara los datos...
+Lee el CSV y extrae de él dos vectores: `before` y `after` que contengan las
+medidas de peso para cada sujeto antes y después de tomar las infusiones. (Por 
+ejemplo: `before=c(peso_antes_sujeto_1, peso_antes_sujeto_2, ...)` y
+`after=c(peso_desp_sujeto_1, peso_desp_sujeto_2, ...)`). Para ello completa 
+el siguiente código, que sigue la siguiente idea:
+
+1. Convierte las fechas usando `as.Date` para compararlas/ordenarlas fácilmente.
+2. Haz un bucle for para iterar individuo a individuo.
+3. Para cada individuo, compara las dos fechas disponibles para decidir qué 
+medida se corresponde con "antes" y cuál con "después".
+
+```{r}
+library(readr)
+weights <- read_csv("data/weights.csv")
+View(weights)
+
+weights
+
+weights$date =  as.Date(weights$date)  # convierte las fechas a la clase "Date"
+before = c()
+after = c()
+weights = weights[order(weights$date),]
+for (subject in unique(weights$subject)) { 
+  #Te devuelve 2 filas del dataframe
+  subject_data = weights[weights$subject == subject,]  # selecciona los datos para "subject"
+   # subject_data tendrá solo dos filas. Averigua cuál de las dos fechas, 
+  # subject_data[1, "date"] o subject_data[2, "date"], se corresponde 
+  # con la medida "antes" y cuál con "después"
+  after_weight = subject_data$weight[2]
+  before_weight = subject_data$weight[1]
+  before = c(before, before_weight)
+  after = c(after, after_weight)
+}
+
+
+print(length(before))
+print(length(after))
+
+
+```
+
+### 2) ¿Qué conclusiones puedes extraer al 0.01 de significación?, ¿miente el anuncio?
+Recuerda que debes... 
+
+1. Escribir claramente cuál es la hipótesis alternativa. 
+2. Validar las asunciones del modelo o discutirlas.
+3. Escribir las conclusiones de forma clara.
+
+**La hipótesis alternativa, aquí:**
+
+```{r}
+
+library("tidyverse")
+#Ha: mu_diff < 1.5
+#HO: mu_diff >= 1.5
+
+diff = (before - after)
+
+#Asunciones:
+
+#Independientes debido a que hemos hecho la diferencia de los datos apareados para una misma persona. Al coger una muestra de 12 personas asumimos indepencencia por población infinita.
+
+
+#Asumimos normalidad por la representación de los datos en el histograma.
+hist(diff)
+
+t.test(diff, alternative = "less", mu = 1.5, conf.level = 0.99)
+
+
+```
+
+**Tus conclusiones, aquí:**
+
+No hay suficiente evidencia para aceptar la hipotesis alternativa (p-valor = 0.6692). La perdida media de peso es de 1.742424, con un intervalo de confianza con un minimo de 3.2077.
+
+
+
+
+--- 
+
+# Viagra y libido (Field, 2012)
+La viagra es un estimulante sexual que se usa para tratar la impotencia. En la 
+literatura de psicología, los problemas de rendimiento sexual se han relacionado
+con una pérdida de libido (Hawton, 1989). Supongamos que se comprueba esta hipótesis
+usando cuatro grupos de participantes. A un grupo se le administra un placebo 
+(una pastilla de azúcar con la misma forma y color que la viagra), mientras que 
+a los otros tres grupos se les administra una dosis baja, una dosis media, y una 
+dosis alta, respectivamente. La variable dependiente fue una medida objetiva de 
+la libido medida en el transcurso de una semana. Estamos interesados en saber 
+si la toma de viagra puede influir en la libido. Datos en "viagra.csv".
+
+### 1) Carga y visualiza los datos...
+```{r}
+library(readr)
+viagra <- read_csv("data/viagra.csv")
+View(viagra)
+
+viagra$dose = as.factor(viagra$dose)
+
+ggplot(viagra, aes(x = dose, y = libido, fill = dose)) + geom_boxplot()
+
+
+```
+
+### 2) Codifica los contrastes...
+... para responder a las siguientes preguntas:
+
+* ¿Existe alguna diferencia en los niveles de libido para los pacientes que 
+reciben el placebo y los pacientes que reciben tratamientos reales?
+* ¿Existe alguna diferencia entre los pacientes que reciben dosis altas de viagra
+  frete a los que reciben dosis bajas o medias?
+* ¿Existe alguna diferencia entre los pacientes que reciben dosis altas y aquellos 
+que reciben dosis medias?
+
+```{r}
+source("utils.R")
+
+#mu_placebo - (mu_high + mu_low + mu_medium)/3 = 0
+
+#mu_high - (0.5*low + 0.5*medium) = 0
+
+#mu_high - mu_medium = 0
+contrasts(viagra$dose)
+my_contrast = rbind(
+  "_placebo-otras" = c(-1/3, -1/3,-1/3,1),
+  "_high-L&M" = c(1, -0.5, -0.5, 0),
+  "_high-medium" = c(1,0, -1, 0)
+)
+
+contrasts(viagra$dose) = get_contrasts_coding(my_contrast)
+
+
+
+
+```
+
+### 3) Crea el modelo de regresión y ANOVA ... 
+... Antes de interpretar los resultados, comprueba si se cumplen las asunciones
+de ambos modelos.
+
+```{r}
+library("performance")
+library("car")
+my_model = lm(libido ~ dose, viagra)
+
+#Comprobamos normalidad de los datos:
+plot(check_normality(my_model), type = "qq")
+
+#Asumimos homogeneidad:
+check_homogeneity(my_model)
+
+#Asumimos independencia: debido a que el numero de pacientes potenciales es mucho mayor a los estudiados. 
+
+
+```
+
+### 4) Comprueba si el test ANOVA es significativo e interpreta los contrastes...
+(Ten en cuenta que solo es necesario comprobar los contrastes si el resultado
+del test ANOVA es significativo.)
+
+```{r}
+
+Anova(my_model, type = 3)
+#Debido a que el p-valor es muy significativo los datos apoyan que todos los grupos son diferentes, por lo que procedemos a hacer los post.Test.
+
+summary(my_model)
+
+#Recibe 1.9333 libido menos los que se toman placebo.
+
+#Los pacientes con dosis altas tiene un libido 1.9 mayor a los que reciben dosis bajas o medias.
+
+#Los pacientes con dosis altas tiene un libido 1.6 mayor a los que reciben dosis medias.
+
+```
+
+### 5) Realiza un análisis Post-hoc...
+A pesar de que los contrastes son bastante informativos, tu jefe te pide que compares
+todas los grupos entre sí para comprender mejor los datos. Usa tanto Bonferroni
+como FDR e interpreta los resultados.
+
+```{r}
+library("emmeans")
+group_means = emmeans(my_model, "dose")
+
+pairs(group_means, adjust = "Bonferroni")
+pairs(group_means, adjust = "FDR")
+```
+
+**Tus conclusiones, aquí**:
+
+---
+
+Respecto a los ajustes de Bonferroni y FDR, debes interiorizar que...
+(fíjate, por ejemplo, en High `Vs medium`):
+
+* Bonferroni es muy conservador en el ajuste de p-valores, mientras que FDR
+hace una corrección más pequeña (los p-valores se quedan más cercanos al 
+contraste original)
+* ¿Cuál es el procedimiento que debemos usar? No hay ningún método mejor o peor. Gran 
+parte del problema es que parece que los métodos se contradicen porque estamos cayendo
+en la trampa de transformar el p-valor en una decisión "dura" (se rechaza Vs no se rechaza).
+Lo mejor en este caso es refugiarse en los intervalos de confianza. La única diferencia
+entre ambos ajustes será la anchura de los intervalos, pero la interpretación 
+será muy similar.
+
+--- 
+
+# Apuestas de adolescentes en UK
+El conjunto de datos `teengamb.csv` contiene datos sobre las
+tasas de juego entre los adolescentes en Gran Bretaña, su género y estatus
+socioeconómico. Una pregunta que nos puede interesar es cómo se relacionan el
+género y los ingresos con cuánto juega una persona (céntrate solo en las
+variables `income`, `sex` y `gamble`)... Sigue los siguientes pasos para crear un 
+ANCOVA...
+
+
+### 1) Carga y visualiza los datos...
+...para valorar si el modelo debe incluir interacciones. Escribe claramente tus conclusiones
+
+```{r}
+
+library("readr")
+teengamb <- read_csv("data/teengamb.csv")
+teengamb
+
+teengamb$sex = as.factor(teengamb$sex)
+
+##Income = income
+#Gamble = +gamble + apuesta
+ggplot(teengamb, aes(x = income, y = gamble, fill = sex)) + geom_boxplot()
+
+# Las medias entre hombres y mujeres son muy parecidas, lo unico que varia es el gamble, que es mayor para los hombres.
+```
+
+**Conclusiones sobre la necesidad de interacción**:
+
+### 2) Crea el modelo...
+... y obtén los intervalos de confianza para los coeficientes y su significación.
+
+```{r}
+
+my_model = lm(gamble ~ income * sex, teengamb)
+my_model
+
+df = bind_cols(teengamb, fit = predict(my_model))
+
+ggplot(df, aes(x = income, col = sex)) + 
+  geom_point(aes(y = gamble)) +
+  geom_line(aes(y = fit), lwd = 1)
+
+#Al no ser paralelas refleja que no hay interacción.
+
+summary(my_model)
+
+confint(my_model)                   #Pr(>|t|)
+# (Intercept)    -11.769152 25.517839 0.4612
+# income          -4.385455  3.287728 0.7743
+# sexMale        -20.733425 24.418773 0.8700
+# income:sexMale   1.082260  9.727751 0.0155 *
+```
+
+
+### 3) Interpreta los coeficientes y escribe tus conclusiones.
+**Conclusiones sobre las variables de interés**:
+
+Debido a que income:sexmale es significativo no interpretamos nuestros coeficientes iniciales.
+Podemos concluir que el gamble aumenta entre un 1 y un 9.7 en funcion del income y del sexo masculino.
+
+### 4) Valora si las asunciones del modelo se cumplen
+
+```{r}
+
+isnorm = check_normality(my_model)
+
+plot(isnorm, type = "qq") #Asumimos normalidad
+
+#Asumimos independencia dentro de los grupos y entre los grupos por población infinita, debido a 
+# que el numero de muestras es mucho menor a la cantidad de adolescentes que apuestan.
+
+
+```
+
+**¿Es el modelo correcto?:** NO ES CORRECTO. Deben haber mas de 2 observaciones por grupo.
+
+--- 
+
+# (Voluntario) Kobe Bryant y manos calientes (Cetinkaya-Rundel)
+La actuación de Kobe Bryant contra los Orlando Magic en la final de 2009 de la 
+NBA le hicieron merecedor del MVP, y muchos aficionados comentaron que estaba con
+"la mano caliente" (o dicho de otra forma, "estaba en racha"). En este ejercicio,
+investigaremos si hay una base estadística para afirmar esto. Este ejercicio 
+también nos enseñará a calcular **p-valores usando simulaciones**, evitando así
+el tener que conocer la distribución del estadístico estudiado.
+
+Los datos relativos a Kobe Bryant se han almacenado en un fichero csv "kobe.csv"
+El `data.frame` cargado tiene más de 100 observaciones y 6 variables, donde cada
+observación es un tiro de Kobe Bryant. La variable `shot` indica si el tiro
+fue canasta (hit: `H`) o un fallo (miss: `M`).
+
+A simple vista, es difícil de valorar si Kobe tenía la "mano caliente" o no.
+Una forma de averiguarlo es considerando que un jugador con la
+"mano caliente" tenderá a tener buenas rachas (sucesiones de canastas). 
+Consideraremos la longitud de un una racha como el *número de canastas consecutivas
+hasta que hay un fallo*. Por ejemplo, en la secuencia
+
+\[ \textrm{H M | M | H H M | M | M | M} \]
+hay 6 rachas, marcadas con un "|". Sus longitudes son 1, 0, 2 , 0, 0, 0.
+
+Calcular la longitud de las rachas manualmente es tedioso y propenso a errores,
+por lo que es mejor implementar una función.
+
+### 1) Implementa una función llamada `count_streak`...
+...que reciba como entrada un vector
+de `H`s y `M`s, y devuelva las longitudes de las rachas. Asegúrate de testearlo
+con el ejemplo anterior y variaciones del mismo.
+
+```{r count_streak}
+library("readr")
+kobe <- read_csv("data/kobe.csv")
+
+kobe$shot = as.factor(kobe$shot)
+
+kobe
+
+
+count_streak = function(lanzamiento){
+  sol = c()
+  j = 0
+  for(i in 1:length(lanzamiento)){
+    if(lanzamiento[length(lanzamiento)]  == "H" && i == length(lanzamiento)){
+      j = j + 1
+      sol = c(sol, j)
+    }else if(lanzamiento[i] == "M"){
+      sol = c(sol, j)
+      j = 0
+    }else if(lanzamiento[i] == "H"){
+      j = j + 1
+    }
+    
+  }
+  sol
+}
+
+count_streak(kobe$shot)
+```
+
+
+### 2) Dibuja un histograma con la longitud de las rachas de Kobe.
+
+```{r plot-streak-kobe}
+
+hist(count_streak(kobe$shot))
+```
+
+## ¿Cuáles son la $H_0$ y la $H_a$?
+En el histograma anterior, podemos observar que Kobe tiene rachas largas, pero 
+¿son lo suficientemente largas como para poder asegurar que tenía "la mano caliente"?
+¿Con qué lo comparamos? 
+
+Para responder a esta pregunta, repasemos el concepto de **independencia**. Dos
+procesos son independientes si el resultado de uno no afecta al otro. Si cada 
+tiro a canasta se considera un proceso independiente con respecto a otros tiros,
+entonces acertar/fallar un tiro no afectará a la probabilidad de que metas el 
+siguiente tiro.
+
+Un jugador con "la mano caliente" tendrá tiros que **no** son independientes 
+el uno del otro. Concretamente, si el jugador mete su primer disparo, nuestro
+modelo de "mano caliente" afirma que tendrá una probabilidad superior de meter su 
+segundo tiro. 
+
+Asumamos por un momento que el modelo de "mano caliente" es válido para Kobe.
+En base a su carrera, el porcentaje medio de veces que Kobe hace canasta está 
+sobre el 45\%. En notación probabilista, la probabilidad de que meta su primer
+tiro a canasta será
+
+\[ P(\textrm{shot 1 = H}) = 0.45. \]
+
+Si mete su primer tiro y tiene "la mano caliente" los tiros **no** son 
+independientes, por lo que la probabilidad de que meta su segundo tiro subirá,
+por ejemplo, hasta el 60\%.
+
+\[ P(\textrm{shot 2 = H} \, | \, \textrm{shot 1 = H}) = 0.60 \]
+
+Como consecuencia de este incremento de probabilidades, podríamos esperar que
+Kobe tuviese rachas más largas comparado con la perspectiva escéptica en 
+la que Kobe **no** tiene "la mano caliente". En este último caso, la probabilidad
+de acertar el segundo tiro todavía es 
+
+\[ P(\textrm{shot 2 = H} \, | \, \textrm{shot 1 = H}) = 0.45. \]
+
+Visto de otra forma, acertar el primer tiro no incrementa sus probabilidades
+de acertar el segundo disparo. Si los tiros de Kobe son independientes, entonces
+tendrá la misma probabilidad de acertar cada tiro independientemente de sus
+tiros pasados: 45%.
+
+Volviendo a la cuestión inicial, ¿cómo sabemos si las rachas de Kobe son lo
+suficientemente largas como para asegurar que tenía "la mano caliente"?
+Lo que haremos es comparar sus rachas con las de alguien que no tiene manos 
+calientes: un tirador independiente (sus tiros no se ven influenciados por los
+tiros pasados). Esta será la hipótesis nula. Más concretamente:
+$$H_0: \text{los lanzamientos de Kobe son independientes}$$
+$$H_1: \text{Kobe tiene rachas más largas de lo habitual ya que los lanzamientos no son independientes}$$
+ 
+Por tanto, el estadístico en el que nos centraremos será $$R: \text{longitud de la racha
+más larga}$$. Dado que no sabemos cómo se distribuye, calcularemos el p-valor 
+mediante simulaciones.
+
+### 3) Simula a Kobe como tirador independiente...
+Para poder comparar a Kobe con el tirador independiente, simula el mismo número
+de tiros que los que hizo Kobe en la final con probabilidad de acierto del 
+45%. Luego, calcula la racha más grande en esta simulación y devuelve este valor. 
+Repite muchas veces las simulación para ...
+
+* ... Dibujar un histograma de la máxima racha de un tirador independiente. Añade 
+al histograma la máxima racha real obtenida por Kobe. Esta es una forma visual 
+de saber si el evento observado es compatible con la $H_0$ (tal y como hacíamos 
+en clase). 
+* Calcula cuántas de estas simulaciones tienen rachas tan o más
+grandes como las observadas en el partido real de Kobe. A partir de este resultado, 
+¿cuál es el p-valor?
+  
+```{r sim_basket}
+sims = replicate(length(kobe$shot), {
+  shots = sample(c(rep("H", 45), rep("M", 55)), length(kobe$shot), replace = TRUE)
+  max(count_streak(shots))
+})
+
+
+hist(sims)
+hist(count_streak(kobe$shot), add = TRUE, col = "red")
+
+max_kobe = max(count_streak(kobe$shot))
+
+p_valor = length(sims[sims >= max_kobe])/length(kobe$shot) #p-valor = 0.962406
+
+```
+  
+
+### 4) Conclusiones 
+..., **¿tenemos evidencia para apoyar que el modelo de "mano caliente" se ajusta a la forma de lanzar de Kobe? Justifica.**
+
+
+Según el p-valor (0.962406) no hay suficiente evidencia para respaldar que Kobe no tiene la mano caliente.
+
+No podemos aceptar la hipótesis alternativa.
+

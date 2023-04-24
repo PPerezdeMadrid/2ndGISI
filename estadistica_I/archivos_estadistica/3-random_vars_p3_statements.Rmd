@@ -1,0 +1,218 @@
+---
+title: "Variables aleatorias III"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+----
+
+En cierto hospital, un 12\% de los pacientes no acude a su cita. Si un equipo 
+médico es capaz de atender 100 personas en un día, cuál es la probabilidad 
+de que una persona se quede sin atender si se dan 110 citas en un día. ¿Cuántas
+citas se pueden dar sin que dicha probabilidad exceda el 5\%?
+
+```{r}
+# ??
+1- pbinom(100, 110, 0.88)
+
+n = 100:110
+  binomial = 1- pbinom(100, n, 0.88)
+  binomial <= 0.05 
+  tabla = table(binomial <= 0.05)
+  tabla[2]+99
+
+
+#108
+
+```
+
+
+
+----
+
+De 2000 familias con 4 niños cada una, cuántos te esperarías que tuviesen
+a) al menos 1 niño (masculino) y b) 2 niñas. 
+
+```{r}
+# X= "nº niños en una familia"
+# Y = nº fam con almenos 1 niño"
+ 
+  #a) Esperanza[Y] = 2000 · P(X >= 1)
+  E_y = 2000 * (1-dbinom(0,4,0.5))
+  print(E_y)
+  
+  #b)   *resolución por simulaciones*
+  # X= "nº niñas en una familia"
+  # Y = nº fam con 2 niñas"
+  
+  #X~B(4, 0.5)
+  #Y~B(2000, P(X=2))
+  rbinom
+  
+    #P(X=2) => por simulación
+    rbinom(1, size= 4, prob = 0.5) #nº simulaciones(1)
+    N=5000
+    n_girls = rbinom(N, size= 4, prob = 0.5)
+    p_success = sum(n_girls == 2) / N
+    
+    #E[Y]
+    mean(
+    rbinom(N, size=2000, p_success)
+    )
+    
+```
+
+
+----
+
+Un enfermero necesita 10 radiografías de la pierna de un niño. Hay un 70\% de 
+probabilidad de que el niño esté quieto durante la prueba. ¿Cuál es la probabilidad
+de que se necesiten más de 15 pruebas?
+
+```{r}
+1 - pnegbinom(5, size=10, prob=0.7) 
+
+```
+
+----
+
+Un informático desea modelar el nº ataques informáticos que su página web
+sufre cada día. Recolecta datos durante 100 días, obteniendo la siguiente
+**tabla de frecuencias**:
+
+|nº de ataques/día   | 0    | 1    | 2   | 3    |
+|:------------------:|:----:|:----:|:---:|:----:|
+|frecuencia          | 45   | 35   |15   | 5    |
+
+¿Probabilidad de que, en un día cualquiera, haya al menos 1 ataque informático?
+
+```{r}
+# ??
+```
+
+
+----
+
+Se tira una moneda hasta que salen 10 caras. A continuación, se meten 10 bolas
+blancas y tantas bolas negras como cruces hayan salido en una urna. Se extraen
+5 bolas de la urna sin reemplazamiento. ¿Cuál es el número más probable de
+bolas blancas y cuál es su probabilidad?
+
+```{r}
+#Planteamiento en OneNote
+
+  #X: nº cruces hasta obtener 10 caras
+  #Y: nº de bolas blancas obtenidas en la extracción de 5 bolas
+
+  #X~NegBinom(10, 0.5)
+  #Y|X=x ~HypGeom(10, x, 5)
+
+  #P(Y=y) para todo valor de y --> moda
+  # 1) calcular la conjunta P(X,Y)
+    #P(X,Y) = P(X)*P(Y|X)
+    x = 3 #prob salga 3 cruces
+    y = 2 #prob salga 2 bolas blancas
+    #P(X=3,Y=2) = P(X=3)*P(Y=2|X=3)
+    dbinom(x=3, 10, 0.5) * dhyper(y=2, 10, x=3, 5)
+  
+    p_xy = function(x,y){
+      dbinom(x, 10, 0.5) * dhyper(y, 10, x, 5)
+    }
+    
+     # 2) Marginalizar X para hallar P(Y)
+     #   1.Tabla con valores x e y
+     #   2.marginalizar fijando la x
+       xs = 0:100    
+       ys = 0:5
+       probs_xy = outer(xs,ys, p_xy)
+       colnames(probs_xy) = paste("P(Y=", ys, ")")
+       
+       probs_y = colSums(probs_xy)
+       plot(ys, probs_y, type="h")
+       
+# ¿Cuál es el número más probable de bolas blancas? ==> 3
+# ¿y cuál es su probabilidad? ==> 0.364966951
+```
+
+----
+
+Usa el TCL para demostrar que una distribución Binomial tiende a una distribución
+$$\mathcal{N}(np, \sigma^2=npq)$$ si $n$ es grande. Dibuja ambas distribuciones
+para visualizar la coincidencia.
+
+```{r}
+# ??
+```
+
+----
+
+Usa el TCL para demostrar que una distribución de Poisson tiende a una distribución
+$$\mathcal{N}(\lambda, \sigma^2=\lambda)$$ si $\lambda$ es grande. Dibuja ambas 
+distribuciones para visualizar la coincidencia.
+
+```{r}
+# ??
+```
+
+----
+
+Tres hermanos van a comer a casa de su abuelita. El 99.7\% de las veces, cada hermano
+come una cantidad de comida comprendida entre 1.2 y 1.8 Kg. ¿Cuál
+es la probabilidad de que logren acabar los 5 Kg de carne que su abuela ha preparado?
+
+```{r}
+1 - pnorm(5, 4.5, 0.1*sqrt(3))
+```
+
+----
+
+Has programado un robot asesino para acabar con tu profesor de estadística. El robot
+dispara al centro de su frío corazón, pero comete un error aproximadamente normal
+en cada una de las coordenadas x e y. La media de ambas normales es 0 y tiene
+desviación típica 5 cm. ¿Cuál es la probabilidad de que el disparo acabe a menos 
+de 1 cm del centro del corazón? Resuelve por simulaciones.
+
+
+```{r}
+
+# ¿¿P(D<1)?? --> D = √x^2+y^2
+
+  #¿Cómo se distribuye D? --> averiguarlo con simulaciones
+  # sd = ∂ = desv. típica
+  N=500
+  x = rnorm(N, 0, sd = 5)
+  y = rnorm(N, 0, sd = 5)
+  d= sqrt(x^2 + y^2)
+  d < 1 #Caso de éxito
+  sum(d<1)/N
+  
+  
+  
+```
+
+----
+
+Trabajamos para una gran compañía de streaming que quiere hacer sugerencias 
+de películas a sus usuarios. Para hacer esto, hay que intentar caracterizar 
+los gustos de cada usuario. Asumimos que las películas que ve un usuario 
+únicamente dependen de dos rasgos de su caracter: su ``aventurosidad (X)'' y su 
+``romanticismo (Y)''. Asumimos que ambos rasgos se pueden caracterizar con 
+$X\sim \mathbb{U}[0, 1]$ y $Y~\sim\mathbb{U}[0, 1]$ (independientes). Si un 
+usuario tiene  como rasgos $X=x$ e $Y=y$:
+
+
+* La probabilidad de ver una película de acción es $p_a = \frac{2 x - y + 1}{6}$. 
+* La probabilidad de ver una película romántica es $p_r = \frac{3y - 2x + 2}{10}$
+* La probabilidad de ver una película de acción-amor es $p_{ar} = 1 - p_a - p_r$. 
+
+De las últimas 20 películas que ha visto un usuario, 4 han sido de acción,
+4 románticas y 12 de acción-amor. ¿Cuáles son sus rasgos X e Y más probables?
+
+```{r}
+# ??
+```

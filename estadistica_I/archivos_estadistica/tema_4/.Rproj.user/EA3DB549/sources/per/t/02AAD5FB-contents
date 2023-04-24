@@ -1,0 +1,193 @@
+---
+title: "4-Intervalos de confianza para una población Normal"
+output: html_document
+---
+$z
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+iq_df <- read_csv("data_1/iq.csv")
+View(iq)
+```
+
+
+# Intervalos de confianza para medias si la varianza es conocida
+library(readr)
+--- 
+
+El fichero "iq.csv" contiene los resultados de un test de cociente intelectual (CI)
+realizado a una muestra de estudiantes de cierta universidad (con cientos de miles 
+de estudiantes matriculados). ¿Cuál es el cociente intelectual medio de los 
+alumnos de la universidad? Ten en cuenta que los tests de cociente intelectual 
+se diseñan para que la desviación estándar poblacional sea de 15 puntos.
+
+(Paso 1) Calcula la media muestral para el problema de los CIs.
+
+```{r paso_1}
+# media muestral --> mean
+sum(iq_df[, 3])/100
+mean(iq_df$iq)
+
+
+```
+
+(Paso 2) ¿Cuál es la distribución de $\bar{X}$? 
+
+**Responde aquí**
+¿en este ejercicio, es razonable asumir normalidad?
+```{r}
+#histograma, contar cuantos casos caen para cada numero
+iq = iq_df$iq
+hist(iq) 
+#es razonable asumir normalidad
+```
+```{r}
+#aprender a hacer dibujos
+install.packages("ggplot2")
+library("tidyverse")
+
+#mapeo de columnas a atributos estéticos
+ggplot(iq_df, aes(x = iq, y = grade_point_average) )
+# pedir representaciones de las columnas --> usando geometrias
+  #geom_point -->cada dato se debe representar como un punto
+  ggplot(iq_df, aes(x = iq, y = grade_point_average) )+ geom_point() + geom_line()
+  
+  
+#Introducir info sobre género --> con colores
+    ggplot(iq_df, aes(x = iq, y = grade_point_average , col = gender) )+ geom_point()
+  
+#HACEMOS HISTOGRAMA
+    ggplot(iq_df, aes( x=iq)) + geom_histogram() #ggplot se encarga: cuentas + histograma 
+     ggplot(iq_df, aes( x=iq, col=gender)) + geom_histogram() 
+
+```
+
+
+¿en este ejercicio, es razonable MAS/pobl infinita?
+"cientos de miles de estudiantes" --> tiene sentido pobl infinita
+
+(Paso 4a) Despeja $\mu$ usando las inecuaciones del *paso 3* y empleando que
+$Z=\frac{\bar{X} - \mu}{15/10}$.
+
+**Responde aquí**
+
+(Paso 4b) Halla un \textbf{intervalo de confianza} al 98\% para $\mu$ empleando que
+$\bar{x} = 99$.
+
+```{r paso_4b}
+
+# ??
+```
+
+
+Halla un \textbf{intervalo de confianza} al 90\% para $\mu$ empleando que
+$\bar{x} = 99$
+
+```{r}
+
+# ??
+```
+
+
+
+# Intervalos de confianza para la varianza muestral
+
+Completa el siguiente código para verificar que $S^2$ es sesgado:
+```{r}
+estimate_var <- function(x) {
+  0
+  #1 / length(???) * sum((x - ???) ^ 2)
+}
+
+replicate(
+  5,
+  mean(replicate(10000, {
+    samples <- rnorm(4, sd = 2)
+    estimate_var(samples)
+  }))
+)
+```
+
+Demuestra que $\hat{S}^2$ es insesgado con simulaciones (usa el anterior ejercicio
+como punto de partida).
+
+```{r}
+
+# ??
+```
+
+---
+
+Una máquina fabrica cierta pieza de un ordenador. El tamaño
+deseado de la pieza es de 5 cm. En el proceso de fabricación siempre hay circunstancias
+que no se pueden controlar, por lo que el tamaño de la pieza varía aleatoriamente.
+El proceso de fabricación está diseñado de forma que el tamaño de cualquier pieza 
+$X_i\sim \mathcal{N}(5, \sigma^2)$, aunque todavía no se conoce $\sigma^2$. Para ello, 
+se dispone de los datos almacenados en "pieces.csv". Halla un intervalo de confianza 
+al 99\% para $\sigma^2$.
+
+```{r}
+library(readr)
+pieces <- read_csv("data_1/pieces.csv")
+View(pieces)
+
+s2 = var(pieces$piece_size_cm)
+
+# ??
+```
+
+
+# Intervalos de confianza para la media cuando la varianza es desconocida
+
+Nueva York es conocida como ``la ciudad que nunca duerme''. En cierta encuesta 
+se preguntó a una muestra aleatoria de 25 neoyorquinos cuánto tiempo dormían por 
+la noche. Los datos se encuentra en "new\_york.csv". ¿Apoyan los datos la afirmación 
+de que los neoyorquinos duermen menos de 8 horas por noche en promedio? Usa un 
+nivel de confianza del 96\%.
+
+```{r}
+library("readr")
+library("tidyverse")
+new_york <- read_csv("data_1/new_york.csv")
+#View(new_york)
+ggplot(new_york, aes(x = sleep_hours)) + geom_histogram()
+
+distrib_x = mean (new_york$sleep_hours) 
+sd = sd(new_york$sleep_hours)
+
+t_minus= qt(0.002, df=24)
+t_plus = qt(0.962, df=24)
+
+# media < preguntar MORAGON
+a = distrib_x + 2.17 * 5/5 
+b = distrib_x - 2.17 * 5/5
+
+print( "la media se encuentra entre " , a  ,  " y " ,  b )
+
+#########################################
+#numero de bins --> numero de cestitas
+ggplot(new_york, aes(x = sleep_hours)) + geom_histogram(bins = 5)
+nclass.FD(new_york$sleep_hours) #numero razonable para usar en bins
+
+ggplot(new_york, aes(x = sleep_hours)) + geom_histogram(bins = 4)
+  #podemos asumir entonces que la distribución es gausiana
+```
+
+
+Resuelve el mismo ejercicio empleando la función \textit{t.test}.
+
+```{r}
+library("readr")
+library("tidyverse")
+new_york <- read_csv("data_1/new_york.csv")
+?t.test #T-Students --> hay q pasarle los datos
+
+#Siempre hay que DISCUTIR las asumciones donde
+  #Normalidad de datos (histogramas)
+  #Si muestreo es con reemplazamiento o poblacion infinita 
+my_t_test = t.test(new_york$sleep_hours) #intervalo confianza --> 95
+my_t_test$conf.int #intervalo de confianza
+my_t_test2 = t.test(new_york$sleep_hours, conf.level = 0.96) #confidence level of the interval.
+
+```
+

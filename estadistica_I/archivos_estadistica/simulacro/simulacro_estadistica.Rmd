@@ -1,0 +1,166 @@
+---
+title: "simulacro"
+output: html_document
+date: "2022-11-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pregunta de Razonamiento
+Fisher busca un libro en particular en su extensa biblioteca de n libros. Fisher
+tiene que ir mirando cada libro uno por uno hasta encontrar el libro deseado (con cuidado de ir apartando los libros que ya ha comprobado). Razona detalladamente, usando combinatoria, cuál es probabilidad de que Fisher compruebe más de k libros antes de encontrar el buscado (si Fisher encuentra su libro al k-ésimo intento este no sería un “suceso exitoso” porque no ha comprobado más de k libros). Recuerda que es obligatorio discutir la representación del problema, proporcionar un algoritmo para generar los casos totales y proporcionar un algoritmo para generar los casos favorables. (Los algoritmos pueden ser en R o pseudo-código).
+
+```{r}
+#caso singular: 10 libros, compruebo hasta 5 libros
+
+casos_totales = function(){
+  libros = 1:10
+  sample(libros) #--> ordenar fila: 10!
+}
+
+casos_fav = function(){
+  #cojo 4 libros (k-1) y compruebo q son mios
+}
+```
+
+
+```{r}
+#x : "numero de libros antes del correcto"
+#CASO CONCRETO
+  #Libros: 20
+  #Compruebo más de 7 libros (k=7)
+
+  casos_totales = function(){
+    libros = 1:20
+    sample(libros, 1) #posicion de mi libro
+  }
+  
+  casos_fav = function(){
+    libros = 1:20
+    mi_libro = sample(libros, 1)
+    mi_libro > 7 #cond de exito
+    
+  }
+  
+  print(
+    "problema del podium, hay q colocar "
+  )
+  
+  N=10000
+   sum (replicate(N, casos_fav()))/N
+   
+#-----------------CASO GENERAL -----------
+   
+ casos_totales = function(n){
+    libros = 1:n
+    sample(libros, 1) #posicion de mi libro
+  }
+  
+  casos_fav = function(n,k){
+    libros = 1:n
+    mi_libro = sample(libros, 1)
+    mi_libro > k #cond de exito
+    
+  }
+
+  n=20
+  k=7
+   sum (replicate(N, casos_fav(n,k)))/N
+
+
+```
+## Problemas
+Un grupo de 4 chicos y 9 chicas van al cine y se sienten en butacas numeradas del 1 al 13. Calcula, usando combinatoria, las siguientes probabilidades. Recuerda que es obligatorio
+discutir la representaci´on del problema, proporcionar un algoritmo para generar los casos totales y proporcionar un algoritmo para generar los casos favorables. (Los algoritmos pueden ser en R o pseudocódigo).
+(a) (0.5 puntos) ¿Cuál es la probabilidad de que la quinta persona sea un chico?
+(b) (0.5 puntos) ¿Cuál es la probabilidad de que el primer chico est´e en la quinta posición?
+(c) (0.5 puntos) ¿Cuál es la probabilidad de que los cuatro hombres se sienten en las cuatro primeras butacas?
+(d) (0.5 puntos) ¿Cuál es la probabilidad de que todos los hombres se sienten juntos?
+
+```{r }
+#a) P("quinta persona sea un chico")
+  casos_totales = function(){
+    personas = c(rep(1,4), rep(0,9)) 
+    sample(personas)            #Probabilidad = permutaciones (fila ordenada): n!
+  }
+  
+  casos_fav = function(){
+    # _ _ _ _ _  1  _ _ _ _ _ _ _ _ 
+    #Elegimos cual de los 4 chicos va a ser el quinto: 4 posibilidades
+    # ordenamos a las 4 personas q van a ir antes del chico: (podium) var(12,4)
+    # ordenamos al resto (problema fila ordenada): 8!
+                                
+  }
+  
+   4*variaciones(12,4) * 8! / 13!
+     
+#b) (Primer chico en la quinta posición)
+  casos_totales = function(){
+    personas = c(rep(1,4), rep(0,9)) 
+    sample(personas)            #Probabilidad = permutaciones (fila ordenada): n!
+  }
+  
+  casos_fav = function(){
+    personas = c(rep(1,4), rep(0,9)) 
+    butacas = sample(personas)  
+    sum(butacas[1:5]) == 1      
+    
+    # a a a a o _ _ _ _ _ _ _ --> 8!
+    # Elegir las 4 chicas  q van delante del chico (podium)--> variaciones(4,12)
+    # Colocar 9 chicas en las 9 posiciones --> 9!
+  }
+  
+  (factorial(8)*variaciones(9, 4) * 4)/factorial(13)
+  
+#c) P(4 hombres en las 4 primeras butacas)
+    
+    #Elegir que 4 hombres se sientan: 4! (ordenar fila)
+    # Elegir posicion del resto: 9!
+    
+    factorial(4)* factorial(9) / factorial(13)
+    
+#d) P(probabilidad de q todos los hombres se sienten juntos)
+    #Elegimos asiento por el q empiezan: 13 posibilidades
+    #ordenamos a los hombres: 4!
+    #ordenamos a las mujeres: 9!
+    
+    13*factorial(4)* factorial(9) / factorial(13)
+```
+
+Cierto sistema se basa en dos módulos A y B. Un fallo de cualquier módulo  provoca un fallo de todo el sistema. Llamamos X a la vida útil del módulo A (en años), e Y a la vida útil del módulo B (en años). Su función de densidad conjunta es
+f(x, y) = (
+            c · exp (−x·y)   0 < x < 10; 0 < y < 10,
+            0                 otherwise
+
+siendo c = 1/5.182385
+
+(a) ¿Cuál es la probabilidad de que el sistema funcione al menos 2 años sin fallos?
+(b) ¿Calcula la probabilidad de que B dure al menos 2 unidades de tiempo m´as que A.
+(c) ¿Cuál es la vida útil esperada para B si A ha durado 4 unidades de tiempo?
+
+```{r }
+#X: "años hasta q falle A"
+#Y: "años hasta q falle B"
+#Suponenos independencia entre sucesos
+
+ f_xy = function(x, y){
+    ifelse(x > 0 & x < 10 & y > 0 & y < 10,
+           1/5.182385 * exp(-x * y), 
+           0)
+ }
+
+#a) P(Sistema funcione al menos 2 años) = P(X>2, Y>2)
+    #P(X>2, Y>2) = P(X=2) * P(Y=2) [independencia]
+
+  f_x_menor2 = 
+
+```
+
+
+
+
+
+
+

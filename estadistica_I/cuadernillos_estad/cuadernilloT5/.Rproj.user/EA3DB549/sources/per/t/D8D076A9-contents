@@ -1,0 +1,280 @@
+---
+title: "3-Variables aleatorias I"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Distribuciones de variables aleatorias discretas
+
+----
+
+Sea la VA X: "nº de caras en n lanzamientos de una moneda
+cuya probabilidad de cara es p". Estudia su distribución para el caso
+$p=1/2$, $n=100$ mediante la función de probabilidad.
+
+```{r}
+#P(X=x) = choose(n x)* p^x * (1-p)^n-x
+prob_de_x = function(x, n, p){
+  choose(n, x)* p^x * (1-p)^(n-x)
+}
+```
+
+--- 
+
+Escribe una función de R para la función de distribución de la VA aleatoria
+X: ''nº de caras en 100 lanzamientos de una moneda cuya probabilidad de cara es 0.5".
+Dibújala y úsala para responder a las siguientes preguntas:
+
+  * $P(40 \leq X \leq 60)$
+  * $P(40 < X < 60)$
+  * $P(40 \leq X < 60)$
+  
+```{r}
+
+#X: num de caras
+all_probs = prob_de_x(0:100, 100, 0.5)
+
+plot(0:100, all_probs, type = "h")
+```
+
+--- 
+
+Halla la función de probabilidad de X: ''nº de caras en 2 lanzamientos de
+una moneda cuya probabilidad de cara es 0.5'' a partir de la siguiente función
+de distribución:
+
+```{r}
+#F(x) = P(X<= x)
+#F(x) = sum(prpb_de_x(0:x)
+F_de_x = function (x, n , p){
+  sum(prob_de_x(0:x,n,p))
+}
+
+F_de_x = Vectorize(F_de_x)
+
+F_de_x(0:1, 2, 0.5)
+plot(seq(1,3, by=0.5), F_de_x(seq(1,3, by=0.5), 3, 0.5), type = "l")
+
+
+F_values = c('0' = 0.125, '1' = 0.5, '2' = 0.875, '3' = 1)
+```
+  
+  
+# Esperanza varianza y otros estadísticos resumen
+## Medidas de tendencia central
+
+---- 
+
+La mediana y la moda de X (''nº de caras en 100 lanzamientos de una moneda
+sin trucar'') son fáciles de calcular por razonamiento. Realiza esos mismos
+cálculos usando R.
+
+```{r}
+y_heads =prob_de_x (1:100, 100, 0.5)
+plot(1:100, y_heads, type = "h" )
+abline(v = 50, col=2, lwd = 3)
+
+```
+
+
+---- 
+
+Calcula la esperanza de la variable aleatoria X:''nº de caras en 100 lanzamientos
+de una moneda sin trucar'' usando 1) la definición y 2) simulaciones. ¿Cuadra
+con tu intuición?
+
+```{r}
+# E[X] = 0*P(0)+1 *P(1) + ...
+esperanza_def = function(x,n,p){
+  x * prob_de_x(x,n,p)
+}
+
+sum(esperanza_def(1:100,100,0.5))
+
+#----------simulaciones-----------
+
+N=100
+
+sims = replicate(N, {
+  moneda = sample(0:1, 1) #cara: 1 , cruz:0
+})
+
+sum(sims)/N
+
+
+```
+
+
+---
+
+Un jugador gana 1 euro si al tirar un dado obtiene un 1 o un 3; pierde 2 euros
+si sale un 2, 4, 6; y gana 4 euros si sale un 5. ¿Cuál es la ganancia esperada? 
+¿Jugarías a este juego?
+
+```{r}
+#X: dinero ganado
+# E[X] = 1 * P(X="1 euro") +  (-2) * P(X="-2 euros") + 4 * P(X="4 euros")
+
+esperanza =  1*2/6 -2*3/6  + 4*1/6
+print (esperanza)
+
+```
+
+# Distribuciones conjuntas de variables discretas
+## Distribuciones conjuntas de variables discretas
+
+----
+    
+Se lanza una moneda $n$ veces (prob. de cara es $p$). Considera las VAs X:
+''nº de caras'' e  Y: ''nº de caras iniciales (antes de la primera cruz o del fin
+del experimento)''. Halla la distribución conjunta para cualquier $n$ y $p$ y
+luego particulariza para $n=4$,$p=0.5$.
+
+```{r}
+#X: num de caras
+#Y: num de caras hasta cruz o final 
+# n = 4, p = 0.5
+
+#F(x,y)?????
+prob_de_xy = function (x, y, n, p){
+  ifelse(y==n & x == n, 
+         p^n,
+        choose(n-(y+1), x-y) * p^x * (1-p)^(n-x))
+}
+
+prob_de_xy(0:4, 0:4, 4, 0.5)
+
+x= 0:4
+y=0:4
+
+pv = outer( x,y, prob_de_xy, n=4, p=0.5)
+  rownames(pv) = paste("X(", 0:4, ")")
+  colnames(pv) = paste("Y(", 0:4, ")")
+  pv
+  
+# -------------------MARGINALZIZAR---------------
+    prob_x = rowSums(pv)
+    prob_y = colSums(pv)
+    
+    esperanza = sum (x * prob_x)
+    esperanza
+
+```
+
+----
+
+Partiendo de la función de probabilidad conjunta del ejemplo anterior,
+($n=4$ $p=0.5$), calcula las funciones de probabilidad marginales para
+X (nº de caras) e Y (nº de caras iniciales).
+
+```{r}
+# ???
+```
+
+## Distribuciones condicionales de variables discretas
+
+----
+
+En una urna hay dos monedas trucadas con probabilidad de cara $p_0=0.4$ y $p_1=0.6$.
+Se elige una al azar y se tira 100 veces. Sea X:''nº de caras obtenidas'' e 
+Y: ''moneda elegida''. Obtener la función de probabilidad de X.
+
+```{r}
+#X: num de caras obtenidas
+#Y: moneda elegida
+
+#Prob(X = x, Y = 0 ó 1)
+
+prob_x_y0 = function(x) prob_de_x(x, 1, 0.4)
+prob_x_y1 = function(x) prob_de_x(x, 1, 0.6)
+
+prob_x_y = function(x, y){
+  #P(X|Y=1)* P(Y=0) ó P(X|Y=1)* P(Y=1)
+  ifelse(y==0, prob_x_y0 * 0.5, prob_x_y1 * 0.5)
+} 
+
+#CRear tabla 
+x = 0:100
+y= 0:1
+ pv_xy = outer(x, y, p_xy)
+
+
+```
+
+----
+
+Si se han obtenido X=48 caras, ¿cuál es la probabilidad de que la moneda usada
+sea la correspondiente a $p_0$?
+
+```{r}
+# ???
+```
+
+
+## Estadísticos de variables aleatorias conjuntas
+
+Sea X:''Cantidad mensual de lotes comprados por una empresa a su proveedor'' e 
+Y: ''Precio por lote ofertado por el proveedor (en miles de euros)''. 
+La distribución conjunta de ambas variables se recoge en la siguiente tabla:
+
+```{r}
+probs = matrix(
+  c(0.00, 0.00, 0.03, 0.18,
+    0.00, 0.04, 0.24, 0.02,
+    0.02, 0.23, 0.04, 0.00,
+    0.16, 0.04, 0.00, 0.00),
+  byrow = TRUE,
+  ncol = 4
+)
+rownames(probs) <- paste0("y=", seq(1, 2.5, by=0.5))
+colnames(probs) <- paste0("x=", 1:4)
+
+```
+
+¿Cuál es el coste esperado para la empresa en el siguiente mes de actividad?
+
+```{r}
+#Coste esperado = E[X*Y] = p(x=1, y=1) + P(x=2,Y=1), ...
+#Generar tabla x*y
+
+x = 1:4
+y= c(1, 1.25, 2, 2.5)
+
+costeEsperado = sum(outer(x, y) * probs) #outer por defecto multiplica
+print(costeEsperado)
+
+lattice::levelplot(probs)
+```
+
+---- 
+
+Calcula la correlación entre X e Y en el problema de la empresa y el proveedor.
+
+```{r}
+# queremos saber la CORRELACIÓN 
+  #covarianza[x,y]/desvX * desvY
+  E_xy = costeEsperado
+  p_x = rowSums(probs)
+  mu_x = sum(x*p_x)
+  E_x2 = sum(x^2*p_x) #teorema estadsita inconsciente
+  var_x = E_x2 - mu_x^2
+  desvX = sqrt(var_x)
+  
+
+    p_y = colSums(probs)
+    mu_y = sum(y*p_y)
+    E_y2 = sum(y^2*p_y) #teorema estadsita inconsciente
+    var_y = E_y2 - mu_y^2
+    desvY = sqrt(var_y)
+    
+    sigma_xy = E_xy - mu_x*mu_y
+    
+    rho = sigma_xy/desvX*desvY
+    rho
+  
+  
+```

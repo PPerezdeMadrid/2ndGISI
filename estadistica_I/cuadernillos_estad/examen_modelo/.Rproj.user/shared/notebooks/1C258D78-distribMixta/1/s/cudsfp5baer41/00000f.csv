@@ -1,0 +1,36 @@
+"0","#sabiendo cuanto vale la desv poblacional
+power.t.test(delta = 30,  #diferencia de medias --> 30h
+             sd = 120, 
+             sig.level = 0.01,
+             power = 0.9,
+             type = ""one.sample"", 
+             alternative = ""two.sided"")
+"
+"1","
+    "
+"1"," "
+"1","One-sample t test power calculation"
+"1"," "
+"1","
+
+"
+"1","              n = 241.3971"
+"1","
+"
+"1","          delta = 30"
+"1","
+"
+"1","             sd = 120"
+"1","
+"
+"1","      sig.level = 0.01"
+"1","
+"
+"1","          power = 0.9"
+"1","
+"
+"1","    alternative = two.sided"
+"1","
+"
+"1","
+"

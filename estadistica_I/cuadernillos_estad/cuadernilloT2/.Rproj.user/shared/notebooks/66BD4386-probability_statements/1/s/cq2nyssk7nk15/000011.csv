@@ -1,0 +1,14 @@
+"0","num_pareja = sample(1:4, 1)
+  resto_num = setdiff(1:4, num_pareja)
+  #2º Elegir palo pareja
+  palo_pareja = sample(c('H', 'C', ""B"", ""O""), 1)
+  #3º Elegir carta restante
+  num = sample(resto_num, 1)
+  palo_resto = sample(c('H', 'C', ""B"", ""O""), 1)
+  
+  paste(palo_resto,num)
+"
+"1","[1]"
+"1"," ""O 2"""
+"1","
+"

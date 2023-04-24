@@ -1,0 +1,16 @@
+nb_patients: "Number of Patients Out of 25 Preferring New Pain Reliever"
+nb_doctors: "Number of Doctors Reporting this Number"
+
+nb_patients,nb_doctors
+0,5
+1,6
+2,8
+3,10
+4,10
+5,15
+6,17
+7,10
+8,10
+9,9
+10 or more, 0
+

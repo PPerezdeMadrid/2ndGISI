@@ -1,0 +1,18 @@
+"0","library(readr)"
+"0","iq <- read_csv(""data_1/data_1/iq.csv"")"
+"2","[1mRows: [22m[34m100[39m [1mColumns: [22m[34m4[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): gender
+[32mdbl[39m (3): student_id, iq, grade_point_average"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","mean(iq$iq)"
+"1","[1]"
+"1"," 99"
+"1","
+"
+"0","n = nrow(iq)"
+"0",""
+"0","sigma = 15^2/n"

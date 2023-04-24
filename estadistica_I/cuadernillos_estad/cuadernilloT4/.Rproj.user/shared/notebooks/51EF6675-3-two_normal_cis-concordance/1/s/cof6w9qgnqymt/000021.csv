@@ -1,0 +1,43 @@
+"0","#5º) ¿Cuantas muestras?
+      power.t.test( delta =  18.075, #media del t.test
+                    sd = sd(diff_postpre),
+                    sig.level = 0.01,
+                    power=0.9,
+                    alternative = ""one.sided"")
+"
+"1","
+    "
+"1"," "
+"1","Two-sample t test power calculation"
+"1"," "
+"1","
+
+"
+"1","              n = 86.47959"
+"1","
+"
+"1","          delta = 18.075"
+"1","
+"
+"1","             sd = 32.68169"
+"1","
+"
+"1","      sig.level = 0.01"
+"1","
+"
+"1","          power = 0.9"
+"1","
+"
+"1","    alternative = one.sided"
+"1","
+"
+"1","
+"
+"1",""
+"1","NOTE: "
+"1",""
+"1","n is number in *each* group"
+"1",""
+"1","
+
+"

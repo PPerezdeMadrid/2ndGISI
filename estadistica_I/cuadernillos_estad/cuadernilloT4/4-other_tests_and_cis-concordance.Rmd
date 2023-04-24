@@ -1,0 +1,87 @@
+---
+title: "Intervalos de confianza y test de hipótesis para dos poblaciones normales"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Datos no-normales
+### Fútbol y Poisson
+Bajo ciertas condiciones, el número de goles marcados en un partido de fútbol 
+se puede aproximar por una distribución de Poisson. El fichero "spain_league.csv"
+contiene datos sobre la liga de fútbol española. Para hacer tus apuestas deportivas,
+es importante saber el número de goles promedio por equipo en cada partido. Usando
+los resultados de la liga 21-22, construye un intervalo de confianza
+del 98\% para el promedio de goles del equipo local en un partido.
+
+ x+ x2 + ... xn ~Normal(n* lambda,n* lambda)
+  media muestral: x+ x2 + ... xn / n ~Normal(lambda, lambda/n) 
+
+```{r}
+library(readr)
+spain_league <- read_csv("data_4/data_4/spain_league.csv")
+#View(spain_league)
+
+#X: num de goles --> Pois(lamda)
+liga2021 = spain_league[spain_league$Season==2021, ]
+lambda_est = mean(liga2021$hgoal)
+
+#0.01 - 0.98 - 0.01
+# z = X_gorrito - lambda / sqrt(lambda/n)--------->  X_gorrito - lambda / sqrt(X_gorrito/n)
+ menos_z = qnorm(0.01)
+ mas_z = qnorm(0.99)
+ 
+ #X_gorrito - 2.3* sqrt(X_gorrito/n) < lambda 
+ z = c(mas_z, menos_z)
+ lambda_est + z * sqrt(lambda_est/length(liga2021$hgoal))
+
+```
+
+
+# Datos tabulares
+## Racismo en la selección de jurados
+Durante los 60s-70s, se dieron casos de racismo en la elección de jurados
+populares. Supuestamente, la elección es al azar entre un listado de todos los
+ciudadanos. Sin embargo, se daban situaciones como que en una preselección de 80
+posibles jurados solo 4 fuesen afroamericanos (de una población con un 50\% de
+afroamericanos). Datos en "juries.csv". Las autoridades se defendían diciendo
+que era pura casualidad. ¿Es esto creíble? Apoya tus conclusiones con gráficos.
+
+```{r}
+
+```
+
+
+### A/B testing
+Una página web de venta de productos ha estudiado el número de conversiones de
+su página web actual (conversión $=$ el usuario hace click en ``comprar ahora'').
+Para aumentar el número de conversiones, rediseña el aspecto de su página web en
+base a *heatmaps*.  La nueva página se prueba con un nuevo conjunto de usuarios,
+midiendo el número de conversiones. Datos en "ab_testing.csv". ¿Se puede 
+concluir que la nueva página incrementa el número de conversiones? 
+Apoya tus conclusiones con un gráfico.
+
+```{r}
+library(readr)
+ab_testing <- read_csv("data_4/data_4/ab_testing.csv")
+View(ab_testing)
+
+ab_testing$has_clicked = as.factor(ab_testing$has_clicked)
+
+#ceros y unos --> IMPOSIBLE normal 
+#utilizaremos --> prop.test 
+
+#1) Crear una matriz " giving the counts of successes and failures, respectively"
+    matriz = table(ab_testing)
+#2) crear vector de éxitos
+    exito_new = matriz[1,1]
+    exito_old = matriz[2,2]
+    exitos = c(exito_new, exito_old)
+#3) Crear el prop test
+    #mu_new > mu_old
+    prop.test(exitos, rowSums(matriz), alternative = "greater")
+```
+

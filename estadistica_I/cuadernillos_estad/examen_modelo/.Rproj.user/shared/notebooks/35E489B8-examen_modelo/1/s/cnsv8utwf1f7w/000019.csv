@@ -1,0 +1,12 @@
+"0","library(readr)"
+"0","iris <- read_csv(""iris.csv"")"
+"2","[1mRows: [22m[34m150[39m [1mColumns: [22m[34m5[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): Species
+[32mdbl[39m (4): Sepal.Length, Sepal.Width, Petal.Length, Petal.Width"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","#Sepal.Length ~Petal.Length + Species"
+"0","ggplot(iris, aes(x=Sepal.Length, y =Petal.Length, col = Species))+ geom_boxplot()"

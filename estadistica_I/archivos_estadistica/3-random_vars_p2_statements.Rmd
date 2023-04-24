@@ -1,0 +1,305 @@
+---
+title: "Variables aleatorias II"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+----
+
+Un call-center recibe llamadas durante todo el día. El tiempo T (en minutos)
+entre llamadas se modela la siguiente función de densidad.
+\[
+  f(x)=\begin{cases}
+               c \cdot e^{- t/ 4.5}\qquad 0 \leq t < \infty\\
+               0 \qquad \text{en otro caso (e.o.c.)}
+      \end{cases}
+\]
+
+Dibuja la función de densidad.
+
+```{r}
+  f= function(t){
+    exp(-t/4.5)
+  }
+integral_result = integrate(f, 0, Inf) # 0 a infinito
+print(integral_result)
+
+integral_result$value #puedo averiguar muchos datos de la integral ($)
+
+```
+
+Acaba de llegar una llamada. ¿Cuál es la probabilidad de que no se reciba
+ninguna llamada en los próximos 5 minutos?
+
+```{r}
+# ??
+```
+
+
+Calcula la función de distribución de la VA T y dibújala. Usa la función de distribución para
+calcular la probabilidad de que el tiempo entre dos llamados sea entre 2 y 3
+minutos.
+
+```{r}
+#Función de densidad
+  f= function(t){ 
+      (1/4.5) * exp(-t/4.5) # intregral c * f ==> c = 1/f
+  }
+#Función de Distribución
+  FF = function(t) {
+    integrate(f, 0, t)$value # -Inf a 0 --> es 0 // de 0 a t --> integral
+  }
+  FF(10000)
+  #P(2<x<3) = integral (f, 2, 3) ==> (con la f(x) de densidad)
+  #F(3) - F(2) ==> con la f(x) de distribución
+  print(FF(3)-FF(2))
+  
+```
+
+
+Calcula la media, moda y varianza de T.
+
+```{r}
+#Esperanza: E[T] = sum t*p(t) ==> integral t*f(t)
+media = integrate (function(t) t*f(t), 0, Inf)$value #mu = media
+print(media)
+
+#Varianza: Var[T] = E[(T- mu)^2] = E[T^2] - mu^2
+#Var[T] = integral t^2*f(t^2) * media^2
+E_T2 = integrate(function(t) (t^2)*f(t) , 0, Inf)$value
+varianza = E_T2 * media^2
+print(varianza) #PREGUNTAR CÓDIGO
+
+```
+
+---
+
+La distribución de $X$ e $Y$ viene dada por:
+ \[
+  f(x)=\begin{cases}
+              ce^{(-x^2)}e ^{(-2y^2)} \qquad -\infty < x < \infty, -\infty < y< \infty \\
+              0 \qquad \text{e.o.c}
+      \end{cases}
+\]
+Visualiza la función de densidad. 
+
+```{r 3d-plot}
+# ====> optional
+# library("plot3D")
+# x <- seq(-3, 3, 0.1)
+# y <- seq(-3, 3, 0.1)
+# z <- outer(x, y, function(x, y) exp(-x^2) * exp(-2*y^2))
+# persp3D(
+#   x, y, z, theta = 50, phi = 30, ltheta = 120,
+#   xlab = "x",  ylab = "y", zlab = "f(x,y)",
+#   shade = 0.25,
+#   expand = 3,
+#   facets = FALSE,
+#   scale = FALSE,
+#   colkey = FALSE
+# )
+```
+
+```{r lattice-contour}
+# ====> optional
+# x <- seq(-3, 3, 0.2)
+# y <- seq(-3, 3, 0.1)
+# z <- outer(x, y, function(x, y) exp(-x^2) * exp(-2*y^2))
+# 
+# lattice::levelplot(z, row.values = x, column.values = y, cuts = 50, colorkey=FALSE)
+# lattice::contourplot(z, row.values = x, column.values = y, region = TRUE, colorkey=FALSE)
+```
+```{r}
+x <- seq(-3, 3, 0.2)
+y <- seq(-3, 3, 0.1)
+z <- outer(x, y, function(x, y) exp(-x^2) * exp(-2*y^2))
+contour(z, x = x, y = y)
+```
+
+
+Calcula (a) $P(X > 1, Y < 1)$; (b) $P(X < Y)$
+
+```{r}
+source("utils.R")
+
+integrate2_dydx(
+  f,
+  from_x = , to_x,
+  from_y = function(x), to_y = funtion(x)
+  #los limites deben ser en función de x
+)
+
+#Función de Densidad
+  fu = function(x,y){     #--> función sin la cte c
+     exp(-x^2 - 2*y^2) 
+  }
+  
+  #integral c * fu = 1 ==> c = 1/integral fu
+  almost_cte = integrate2_dydx(
+    fu,
+    from_x = -Inf , to_x= Inf,
+    from_y = function(x) -Inf, to_y = function(x)Inf  
+
+  )
+  
+  cte = 1/almost_cte$value
+  
+  f = function(x,y) cte * fu(x,y)
+
+# a) P(X>1, Y<1)
+  integrate2_dydx(
+  f,
+  from_x = 1, to_x = Inf,
+  from_y = function(x) -Inf , to_y = function(x) 1
+)
+  
+# b) P(X<Y)
+  integrate2_dydx(
+  f,
+  from_x = -Inf, to_x = Inf,
+  from_y = function(x) x , to_y = function(x) Inf
+)
+  
+  
+  
+  
+```
+
+----
+
+Dos personas acuerdan encontrarse entre las 12:00 y las 12:30 con la condición
+de que nadie esperará más de 5 minutos por el otro. La probabilidad de que llegada
+para cada persona es uniforme entre las 12:00 y las 12:30. ¿Probabilidad de que se
+encuentren?
+
+```{r}
+#Función de densidad
+  f = function(x,y){
+    ifelse((x>0) & (x<30) & (y>0) & (y<30), 
+           1/900, 
+           0)
+  }
+
+  integrate2_dydx(
+    f,
+    from_x=0, to_x=30,
+    from_y=function(x) x - 5, to_y= function(x) x+5
+  )$value
+```
+
+---- 
+
+Supón que un ordenador depende de los componentes A y B, cuyas vidas respectivas
+X e Y se distribuyen conjuntamente con la función de densidad:
+\[
+  f(x, y)=\begin{cases}
+              e^{-y}  \qquad 0 < x < y< \infty \\
+              0 \qquad \text{otherwise}
+      \end{cases}
+\]
+
+Calcula la probabilidad de que B dure al menos tres unidades de tiempo más que A.
+
+```{r}
+source("utils.R")
+
+#Función de densidad
+  f = function(x,y){
+    ifelse((y>x) & (x > 0) , 
+          exp(-y),
+          0)
+  }
+f(4,5)
+
+#Integral
+ integrate2_dydx(
+    f,
+    from_x= 0, to_x= Inf,
+    from_y=function(x) 3 +x , to_y= function(x) Inf
+  )$value
+```
+
+Calcula la probabilidad de A y B duren ambos más de 2 unidades de tiempo.
+
+```{r}
+# ??
+```
+
+Calcula las funciones de densidad marginales.
+
+```{r}
+#Función Marginal de X
+  f_x = function(xv){
+    #f(x,y)
+    integrate(f , xv , Inf, x=xv)$value #Dejo fijo x para calcular integral de y 
+  }
+  
+  f_x = function(xv){
+    exp(-xv-3) #si calculamos la integral con WA y sustituir
+  }
+
+
+#Visualizarlo
+  f_x= Vectorize(f_x)
+  eje_x = seq(1,10, by = 0.001)  #para q sea mas exacto
+  plot(eje_x, f_x(eje_x), type="l")
+
+```
+
+Calcula la función de densidad condicional para X si sabemos que B ha durado
+5 unidades de tiempo.
+
+```{r}
+# ??
+#f_y??
+```
+
+Calcula la función de densidad condicional para Y si sabemos que A ha durado
+5 unidades de tiempo. ¿Cuál es la probabilidad de que B dure entre entre 4
+y 7 unidades de tiempo si A ha durado 5 unidades de tiempo?
+
+```{r}
+f_y_given_x5 = function(y){
+  f(5,y)/f_x(5)
+}
+
+integrate(f_x(5), -Inf, Inf)
+#integral doble debe dar f(5,y)  = 1
+#integral simple f_x(5)= 1
+
+eje_y = seq(0,10,by=0.1)
+plot(eje_y, f_y_given_x5(eje_y)) 
+#y>5 para que la probabilidad no sea nula
+
+```
+
+$$P(4<y<7 | X=5) = \int_4^7 f(y|x=5)$$
+```{r}
+integrate(f_y_given_y, 4, 7)
+```
+
+¿Cuál es el valor esperado para Y si X=5?
+$$E[Y|X=5]= \int y f(y|x=5) dy$$
+
+```{r}
+integrate(
+  function(y) y * f_y_given_x5(y), 5, Inf) #de 5 a infinito
+)
+
+```
+
+----
+
+Tiramos dardos a una diana de radio 1 con centro en el origen. Los dardos impactan
+aleatoriamente en el punto $(X, Y)$. Supongamos que $(X, Y)$ se distribuye
+uniformemente en la diana. ¿Cuál es la distancia esperada al origen?
+
+```{r}
+# ??
+```
+

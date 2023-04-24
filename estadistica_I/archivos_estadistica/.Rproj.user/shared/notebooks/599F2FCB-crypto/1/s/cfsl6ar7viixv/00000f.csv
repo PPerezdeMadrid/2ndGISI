@@ -1,0 +1,6 @@
+"0","new_crypto = crypto[ , c(""unix_time"", ""candlestick_high"",""candlestick_low"", ""crypto"")]
+colnames(new_crypto) = c(""unix_time"", ""high"",""low"", ""crypto"")
+view(new_crypto)
+"
+"2","Error in view(new_crypto) : no se pudo encontrar la función ""view""
+"

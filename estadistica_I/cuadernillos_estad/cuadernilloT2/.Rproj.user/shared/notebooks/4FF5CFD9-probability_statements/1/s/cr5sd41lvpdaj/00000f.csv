@@ -1,0 +1,5 @@
+"0","sample(""C"" , 1:10, 2)
+"
+"2","Error in sample.int(length(x), size, replace, prob) : 
+  invalid 'size' argument
+"

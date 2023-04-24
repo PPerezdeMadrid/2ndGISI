@@ -1,0 +1,530 @@
+---
+title: "Regression is all you need"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Antes de empezar...
+Instala las librerías necesarias (copia y pega en la terminal; no descomentes
+la línea)...
+
+```{r}
+# install.packages(
+#  c("easystats", "GGally", "qqplotr")
+# )
+```
+
+... y carga las librerías más usadas: 
+
+```{r, message=FALSE, warning=FALSE}
+library("tidyverse")
+library("readr")
+theme_set(theme_bw())  # cambia el tema de ggplot
+```
+
+El modelado estadístico es difícil, por lo que en este notebook solo 
+cubriremos algunos aspectos básicos. Si en el futuro te enfrentas a experimentos
+complejos, considera buscar ayuda.
+
+>To consult the statistician after an experiment is finished is often merely to 
+ask him to conduct a post mortem examination. He can perhaps say what the 
+experiment died of. (Ronald Fisher)
+
+
+## Regresión simple
+
+El modelo básico sobre el que se construye gran parte de la estadística
+es el modelo de **regresión lineal**:
+$$y = a + b\cdot x + \epsilon$$
+donde $\epsilon \sim \mathcal{N}(0, \sigma^2)$.
+
+Es instructivo simular datos que sigan este modelo para entender el significado
+de la ecuación:
+
+```{r}
+x = seq(-2, 2, 0.1)
+expected_behaviour = 2 + 3 * x  # a = 2 y b = 3
+epsilon = rnorm(length(x), sd = 1)
+y = expected_behaviour + epsilon
+
+df = data.frame('data_x' = x, 'data_y' = y, 
+                'expected' = expected_behaviour)
+
+ggplot(df, aes(x = data_x, y = data_y)) + 
+  geom_point() + 
+  geom_line(aes(y = expected), col = 2)
+
+# OR...
+# plot(x, y)
+# lines(x, expected_behaviour, col = 2)
+```
+
+Podemos pensar que `expected_behaviour` ($a + b\cdot x$) es el comportamiento
+medio o esperado en la población de interés, mientras que `epsilon` ($\epsilon$)
+representan fluctuaciones aleatorias (bien debidas a errores del proceso de
+medición o que el proceso  estudiado tiene cierta aleatoriedad). Además, la 
+relación entre $x$ e $y$ es muy específica. Si aumenta (disminuye) $x$ aumenta
+(disminuye) $y$. Además, un  incremento de una unidad en $x$ siempre produce el 
+mismo incremento en $y$ (ídem si $x$ disminuye). Se dice que la relación entre 
+$x$ e $y$ es **lineal**.
+
+La primera pregunta a la que nos enfrentamos es la siguiente. 
+**Dados los datos $(x, y)$, ¿podemos estimar `expected behaviour`?**
+
+![](https://media.giphy.com/media/l0ErOholJjSmFlMFG/giphy.gif)
+
+### Ejemplo: linear model (lm)
+```{r}
+# 1) crear un modelo lineal
+naive_model = lm(data_y ~ data_x, data = df)
+# 2) obtener estimaciones de a y b
+summary(naive_model)
+# 3) Obtener predicciones del modelo lineal
+preds = predict(naive_model, interval = "confidence")
+# 4) visualizar el ajuste
+data_and_preds = bind_cols(df, preds)
+ggplot(data_and_preds, aes(x = data_x)) + 
+  geom_point(aes(y = data_y)) + 
+  geom_line(aes(y = expected, col = "Expected")) + 
+  geom_line(aes(y = fit, col = "Predicted")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.2, fill = "black")
+```
+
+Dado que las estimaciones incorporan el error de estimación, es posible realizar
+inferencia acerca de la **significación** de los parámetros.
+
+
+### Ejemplo: inferencia con lm
+Un estudiante de biología desea determinar la relación entre
+temperatura ambiente y frecuencia cardíaca en la rana leopardo, *Rana pipiens*.
+Para ello, manipula la temperatura en incrementos de 2ºC que van desde
+2ºC a 18ºC, registrando la frecuencia cardíaca (pulsaciones por minuto) en cada
+intervalo. Los datos están disponibles en "hr.csv".
+
+```{r}
+source("utils(3).R")
+library(readr)
+hr <- read_table("data/hr.csv")
+
+#Existen 3 universos posibles: 
+  #heart rate (HR) = a + b * temperatura
+  # num1: HR = a [b=0]
+  # num2: HR = a + b*t [b>0]
+  # num3: HR = a + b*t [b<0]
+
+#1º) Crear modelo lineal
+frog_model = lm(hr$heart_rate ~ hr$temperature)
+frog_model
+#2º) Obtener estimaciones INFERENCIA --> SI
+summary(frog_model)
+#3º Obtener predicciones: 
+preds = predict(frog_model, interval = "confidence")
+#4º) Visualizar ajustes
+ggplot(hr, aes(x = temperature)) + geom_line(aes(y = heart_rate))
+```
+
+---
+
+El diseño experimental y los resultados de la inferencia en el ejemplo de las ranas
+nos invitan a concluir que "el aumento de la temperatura *causa* un incremento de 
+la frecuencia cardíaca". Sin embargo, esto no es correcto. Por muy fuerte que 
+parezca la relación entre las variables $x$ e $y$, **nunca debemos interpretar 
+una variable como la causa de la otra**. Una relación significativa entre $x$ e 
+$y$ puede ocurrir por varios motivos:
+
+1. $x$ causa $y$.
+2. $y$ causa $x$.
+3. Existe un tercer factor (llamado **variable de confusión**) que, bien directa
+o indirectamente, causa $x$ e $y$.
+
+![](https://qph.fs.quoracdn.net/main-qimg-13d22f6fda3811a9108d18b71c46e933-pjlq)
+
+Por otra parte, respecto a los **p-valores**...
+
+> There is some debate among statisticians and researchers about the appropriateness 
+of P values, and that the term "statistical significance" can be misleading. If you 
+have a small P value, it only means that the effect being tested is unlikely to be
+explained by chance variation alone, in the context of the current study and the 
+current statistical model underlying the test. If you have a large P value, it 
+only means that the observed effect could plausibly be due to chance alone: it
+is wrong to conclude that there is no effect (emmeans package authors)
+
+En general, hay consenso en que 
+**debe abandonarse la interpretación dicotómica del p-valor** 
+(efecto significativo Vs no-significativo, sobre todo teniendo en 
+cuenta que se basan en un threshold arbitrario) y 
+**que debe favorecerse los resultados basados en intervalos de confianza y tamaños de los efectos**
+(¡incluso si no son significativos!)
+
+> For example, a study on the effects of two different ambient temperatures on 
+paramecium diameter returning an effect size of 20 µm and a p-value of 0.1, 
+if centred on p-value interpretation would conclude 'no effect' of temperature,
+despite the best supported effect size being 20, not 0. An interpretation based on effect size and confidence intervals could, for example, state: 'Our results suggest that 
+paramecium kept at the lower temperature will be on average 20 µm larger in size, 
+however a difference in size ranging between −4 and 50 µm is also reasonably likely'. 
+(...), the latter approach acknowledges the uncertainty in the estimated effect 
+size while also ensuring that you do not make a false claim either of no effect
+if p > 0.05, or an overly confident claim. (Lewis G. Halsey, [The reign of p-value is over](https://royalsocietypublishing.org/doi/10.1098/rsbl.2019.0174))
+
+### Ejemplo: intervalos de confianza en lm
+```{r}
+summary(frog_model)
+confint(frog_model)
+#b>0
+```
+Los resultados sugieren que el ritmo_cardiaco de las ranas se incrementará
+1.77 bpms por cada grado Celsius, si bien un aumento de la frecuencia 
+cardiaca en el rango (1.37, 2.17) es igualmente verosímil.
+
+### Validación de los modelos
+Evidentemente cualquier interpretación está supeditada a que el modelo sea 
+correcto. Debemos ser muy cuidadosos a la hora de verificar que se cumplan las
+asunciones del modelo de regresión lineal. Podemos usar el acrónimo **LINE** para
+recordar las asunciones más importantes del modelo: 
+**Linear, Independent, Normal, Equal variances**.
+
+### Ejemplo: evaluación del modelo `naive_model`
+```{r}
+plot(naive_model, ask = FALSE)
+
+# Comprobar la normalidad con qqplot puede ser difícil. Podemos apoyarnos en 
+# performance::check_normality 
+library("performance")
+# check_normality corre shapiro.test, pero tal y como resalta la documentación
+# "this formal test almost always yields significant results for the distribution
+# of residuals and visual inspection (e.g. Q-Q plots) are preferable."
+is_norm = check_normality(naive_model)
+
+# Para hacer la inspección visual
+plot(is_norm)
+plot(is_norm, type = "qq")
+plot(is_norm, type = "qq", detrend=TRUE)
+```
+
+### Ejercicio: ¿Influye la altura en los salarios?
+Quizás hayas escuchado que la gente más alta gana más. ¿Es cierto? Usa los datos
+en "height_earnings.csv" para indigar sobre esto (datos procedentes de una encuesta
+sobre trabajo, familia y bienestar).
+
+```{r}
+library(readr)
+df_eh <- read_csv("data/heights_earnings.csv")
+#View(heights_earnings)
+#1º) crear modelo linear
+my_model = lm(df_eh$earn ~ df_eh$height)
+#2º) obtener estimaciones
+summary(my_model)
+#3º) visualizar ajustes
+ggplot(df_eh, aes(x=height, y=earn))  + geom_jitter(alpha = 0.6) + geom_smooth()
+
+#--------ASUNCIONES-------------
+is_norm = check_normality(my_model)
+is_norm
+plot(is_norm, type="qq")
+
+
+```
+
+## Regresión múltiple
+Para lidiar con situaciones como la ilustrada en el gráfico de 
+"correlation is not causation" (tiburones Vs helados)
+necesitamos emplear modelos de **regresión múltiple**, dado que estos permiten 
+"controlar" las variables de confusión. Crear un modelo de regresión múltiple
+es análogo al caso unidimensional...
+
+### Ejemplo: ¿Qué influye en los salarios?
+Añade la edad a tu modelo de los salarios para mejorar las predicciones.
+
+```{r}
+library("GGally")
+
+df = read.csv("data/heights_earnings.csv")
+ggpairs(df[, c("earn", "height", "age")])
+ha_model = lm(earn ~ height + age, df)
+df$predictions = predict(ha_model)
+
+ggplot(df, aes(x=height, col = sex)) + geom_point(aes(y=earn)) 
+
+summary(ha_model)
+
+#------------ASUNCIONES-----------
+is_norm = check_normality(ha_model)
+is_norm
+plot(is_norm, type="qq")
+pront("NO normal")
+
+#-------TRANSFORMACIÓN LOGARÍTMICA ------------
+  log_earn = log(df$earn)
+  log_height = log(df$height)
+  log_model = lm(log_earn~log_height + df$sex)
+  log_model 
+  summary(log_model)
+  
+  is_normlog = check_normality(log_model)
+  is_normlog
+  plot(is_normlog, type="qq")
+  print("ES normal")
+  
+  summary(ha_model)
+  
+```
+
+### Ejercicio: asunciones del modelo de los salarios
+
+```{r}
+
+```
+
+---
+
+Hasta ahora solo hemos usado datos continuos, pero nada evita **usar datos categóricos
+como predictores**. ¡Ojo! Los coeficientes asociados a datos categóricos **no deben 
+interpretarse como una pendiente**.
+
+### Ejemplo: regresión múltiple con datos categóricos
+Construye un modelo de regresión lineal para predecir el peso de una persona a partir
+de los datos contenidos en "antrop.csv". Interpreta los coeficientes de la regresión.
+
+```{r}
+antrop = read.csv("data/antrop.csv")
+antrop$male = as.factor(antrop$male)
+
+antrop_model = lm(weight ~ height + male, data = antrop)
+antrop_model
+
+ antrop_preds = bind_cols(antrop, fit = predict(antrop_model))
+ ggplot(antrop_preds, aes(x = height, col=male)) + 
+  geom_point(aes(y = weight)) +
+  geom_line(aes(y = fit), lwd = 2)
+
+ summary(antrop_model)
+```
+
+El modelo se puede escribir como
+$$weight = -29 + 0.47 * height + 1.23 * male$$ 
+por lo que 1.23 significa que, de media y para una misma altura, los hombres 
+pesan 1.23 Kg más que las mujeres (hemos **ajustado por el efecto de la altura**).
+
+### Ejercicio: Intervalos de confianza
+Usa intervalos de confianza para interpretar los resultados de la regresión.
+
+```{r}
+Confint(antrop_model)
+```
+
+### Ejercicio: Howell
+Los datos contenidos en "howell1.csv" son datos censales parciales del 
+área !Kung San compilados a partir de entrevistas realizadas a finales de la década
+de 1960. Crea un modelo para predecir el peso de los individuos a partir 
+de la altura y el sexo. Evalúa la bondad del modelo.
+
+```{r}
+library(readr)
+howell1 <- read_delim("data/howell1.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+#View(howell1)
+howell1$male = as.factor(howell1$male)
+kung_model = lm(weight~height + male, data = howell1)
+kung_model
+summary(kung_model)
+confint(kung_model)
+
+```
+
+Sin ni siquiera usar `plot(howell_model)` ya somos capaces de ver que el ajuste
+es malo... cualquier conclusión basada en un modelo erróneo será errónea 
+(**garbage in, garbage out**).
+
+
+### Ejemplo: dummy variables y contrastes
+El dataset `iris` (puedes obtenerlo con `data(iris)`) contiene medidas del sépalo
+y pétalo de varias especies de iris. Construye un modelo lineal para predecir
+la longitud del sépalo únicamente en función de la especie. Interpreta los coeficientes
+de la regresión.
+
+
+```{r}
+
+irisdata = data(iris)
+
+iris_model = lm(Sepal.Length~Species, iris)
+#datos categóricos --> boxplot
+ggplot(iris, aes(x=Species, fill=Species)) + geom_boxplot(aes(y=Sepal.Length))
+
+iris_model
+
+```
+
+
+```{r}
+data(iris)
+iris_model = lm(Sepal.Length ~ Species, iris)
+print(summary(iris_model))
+
+iris_preds = bind_cols(iris, fit = predict(iris_model))
+ggplot(iris_preds, aes(x=Species, fill = Species)) + 
+  geom_boxplot(aes(y=Sepal.Length)) + 
+  geom_point(aes(y = fit), shape=4, size=3)
+```
+
+Al interpretar los coeficientes de la regresión, observamos que 
+`lm` ha tomado como referencia la especie `setosa`. Esto se puede observar usando
+`contrasts`.
+
+```{r}
+contrasts(iris$Species)
+```
+
+Es decir el modelo es
+$$sepal = \text{mean-setosa-sepal} + 0.93 * versicolor + 1.58 * virginica.$$
+
+Sin embargo, podríamos reescribir el modelo de otra forma de forma 
+que los coeficientes tengan otro significado. Un ejemplo sencillo sería:
+$$sepal = \text{mean-versicolor-sepal} + \alpha_1 * setosa + \alpha_2 * virginica.$$
+
+En este caso, simplimente estamos variando la especie de referencia. De hecho, 
+`contrasts` se puede modificar para usar como referencia otro nivel del factor:
+
+### Ejemplo: contrastes
+```{r}
+#reescribir contrastes --> relevel!!!!
+iris$Species = relevel(iris$Species, "versicolor")
+iris_model_2 = lm(Sepal.Length ~ Species, iris)
+summary(iris_model_2)
+
+```
+
+```{r}
+iris$Species = relevel(iris$Species, "versicolor")
+contrasts(iris$Species)
+iris_model_2 = lm(Sepal.Length ~ Species, iris)
+print(summary(iris_model_2))
+```
+
+Lo interesante es que podemos 
+**ajustar los contrastes de forma que respondan a nuestras preguntas científicas**. 
+En general, estos contrastes deben ser **ortogonales**.
+
+### Ejemplo: contrastes ortogonales
+Imagínemonos el siguiente universo paralelo. En este universo paralelo solo 
+existe la especie setosa. Una empresa de ingeniería genética te contrata para
+crear nuevas especies con un sépalo más grande. Desarrollas un método conocido
+como "Método V", que tiene dos variantes "V-I" y "V-II". Los experimentos con
+estas variantes dan lugar a dos nuevas especies que llamas versicolor (V-I) y 
+virginica (V-II). Te planteas dos preguntas científicas: 
+
+1. ¿Es el método V capaz de crear especies con el sépalo más grande?
+2. ¿Existe alguna diferencia entre V-I y V-II?
+
+```{r}
+#¿Es el método V capaz de crear especies con el sépalo más grande?
+# mu_setosa > mu_vI + mu_vII/2 --> mu_setosa - 0.5*mu_vI - 0.5*mu_vII > 0
+# ¿Existe alguna diferencia entre V-I y V-II?
+# mu_vI != mu_vII --> mu_vI - mu_vII != 0
+
+
+matriz_contrastes = rbind(
+    "setosa vs v" =  c(1, -0.5, -0.5),
+    "VI vs vII" = c( 0, 1, -1 )
+)
+
+my_coding = get_contrasts_coding(matriz_contrastes)
+contrasts(iris$Species) = my_coding
+contrasts(iris$Species)
+
+v_model = lm(Sepal.Length ~ Species, iris)
+summary(v_model)
+confint(v_model)
+```
+
+
+```{r}
+source("utils.R")   # cargamos get_contrasts_coding
+# Cambiamos otra vez la especie referencia (no es necesario, pero para tener 
+# a las vs juntas)
+iris$Species = relevel(iris$Species, "setosa")
+levels(iris$Species)
+contrasts(iris$Species)
+
+my_contrasts = rbind(
+  "V - setosa" = c(-1, 0.5, 0.5),
+  "I - II" = c(0, 1, -1)
+)
+my_coding = get_contrasts_coding(my_contrasts)
+contrasts(iris$Species) = my_coding
+contrasts(iris$Species)
+v_model = lm(Sepal.Length ~ Species, iris)
+summary(v_model)
+confint(v_model)
+```
+
+El método V parace producir sépalos más grandes. Por otra parte, V-II es mejor
+que V-I.
+
+---
+
+LLegados a este punto, ¡ya hemos cubierto el 90% de los contenidos habituales 
+de un curso de estadística habitual! Aunque parezca mentira, ya hemos hecho 
+análisis tan complejos como
+
+* Análisis de la varianza (anova): por ejemplo, en el problema del método V,
+* Análisis de la covarianza (ancova): con el dataset `antrop.csv` o `howell`,
+* ...
+
+Desde una perspectiva moderna, 
+**todos los análisis clásicos (T-test, anova, ancova) pueden considerarse como simples modelos de regresión**.
+Esto demuestra el  poder unificador de esta perspectiva. En las siguientes secciones
+revisaremos sin embargo estos modelos clásicos para afianzar la conexión con los
+modelos de regresión.
+
+
+### Ejercicio: ¿Qué influye en los salarios?
+Añade la variable sexo al modelo de los salarios. ¿Cuál es la diferencia en ganancias 
+para hombres y mujeres de la misma altura? 
+
+```{r}
+library(readr)
+df <- read_csv("data/heights_earnings.csv")
+#View(heights_earnings)
+
+#1º) Visualizar
+ggplot(df, aes(x=height, col=ed)) + geom_point(aes(y=earn))
+
+#2º) Modelo Lineat
+my_model = lm(earn~height + sex + ed, df)
+my_model
+
+#3º) asunciones
+
+is_norm = check_normality(my_model)
+is_norm
+plot(is_norm, type="qq")
+
+df$log_earn = log(df$earn)
+df$log_height = log(df$height)
+df
+
+my_log_model = lm(log_earn ~log_height + sex + ed, df)
+summary(my_log_model)
+my_model2 = lm(earn~height + sex, df)
+summary(my_model2)
+
+
+```
+
+Añade la variable educación al modelo de los salarios. Modifica los contrastes
+para responder a las siguientes preguntas:
+
+1. ¿Merece la pena estudiar "high school" o "universidad" o basta con quedarse en
+"elementary" (en términos de salario)?
+2. ¿Merece la pena estudiar "universidad" comparado con "high school"?
+
+```{r}
+# ??
+```
+

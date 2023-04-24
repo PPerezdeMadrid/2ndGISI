@@ -1,0 +1,225 @@
+---
+title: "Variables aleatorias II"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+----
+
+Un call-center recibe llamadas durante todo el día. El tiempo T (en minutos)
+entre llamadas se modela la siguiente función de densidad.
+\[
+  f(x)=\begin{cases}
+               c \cdot e^{- t/ 4.5}\qquad 0 \leq t < \infty\\
+               0 \qquad \text{en otro caso (e.o.c.)}
+      \end{cases}
+\]
+
+Dibuja la función de densidad.
+
+```{r}
+# Funcion de densidad
+
+f_tiempo = function(t){
+  exp(-t/4.5)
+}
+
+integral = integrate(f_tiempo, 0, Inf)$value
+ c = 1/integral 
+ 
+ f_tiempoC = function(t){
+   c * exp(-t/4.5)
+ }
+ 
+ curve(f_tiempoC, from = 0, to = 100)
+```
+
+Acaba de llegar una llamada. ¿Cuál es la probabilidad de que no se reciba
+ninguna llamada en los próximos 5 minutos?
+
+```{r}
+#P(T>5)
+integrate(f_tiempoC, 5, Inf)$value
+
+```
+
+
+Calcula la función de distribución de la VA T y dibújala. Usa la función de distribución para
+calcular la probabilidad de que el tiempo entre dos llamados sea entre 2 y 3
+minutos.
+
+```{r}
+# ??
+```
+
+
+Calcula la media, moda y varianza de T.
+
+```{r}
+mu = integrate(function(t) t * f(t), 0, Inf)
+print(mu)
+# Var[T] = E[(T - mu)^2] = E[T^2] - mu ^ 2
+# E[T^2] = integrate t ^ 2 * f(t)
+E_T2 = integrate(function(t) t^2 * f(t), 0, Inf)
+varianza = E_T2$value - mu$value ^ 2
+print(varianza)
+```
+
+---
+
+La distribución de $X$ e $Y$ viene dada por:
+ \[
+  f(x)=\begin{cases}
+              ce^{(-x^2)}e ^{(-2y^2)} \qquad -\infty < x < \infty, -\infty < y< \infty \\
+              0 \qquad \text{e.o.c}
+      \end{cases}
+\]
+Visualiza la función de densidad. 
+
+```{r 3d-plot}
+# ====> optional
+# library("plot3D")
+# x <- seq(-3, 3, 0.1)
+# y <- seq(-3, 3, 0.1)
+# z <- outer(x, y, function(x, y) exp(-x^2) * exp(-2*y^2))
+# persp3D(
+#   x, y, z, theta = 50, phi = 30, ltheta = 120,
+#   xlab = "x",  ylab = "y", zlab = "f(x,y)",
+#   shade = 0.25,
+#   expand = 3,
+#   facets = FALSE,
+#   scale = FALSE,
+#   colkey = FALSE
+# )
+```
+
+```{r lattice-contour}
+# ====> optional
+# x <- seq(-3, 3, 0.2)
+# y <- seq(-3, 3, 0.1)
+# z <- outer(x, y, function(x, y) exp(-x^2) * exp(-2*y^2))
+# 
+# lattice::levelplot(z, row.values = x, column.values = y, cuts = 50, colorkey=FALSE)
+# lattice::contourplot(z, row.values = x, column.values = y, region = TRUE, colorkey=FALSE)
+```
+```{r}
+x <- seq(-3, 3, 0.2)
+y <- seq(-3, 3, 0.1)
+z <- outer(x, y, function(x, y) exp(-x^2) * exp(-2*y^2))
+contour(z, x = x, y = y)
+```
+
+
+Calcula (a) $P(X > 1, Y < 1)$; (b) $P(X < Y)$
+
+```{r}
+source("utils.R")
+fsinC = function(x,y){
+  exp(-x^2)*exp(-2*y^2)
+}
+
+integral_c = integrate2_dydx(
+  fsinC,
+  from_x=-Inf, to_x = Inf,
+  from_y = function(x) -Inf, to_y = function(x) Inf 
+)
+
+c = 1/integral_c$value
+
+f = function(x,y){
+  c * exp(-x^2)*exp(-2*y^2)
+}
+
+#Solución a
+integrate2_dydx(
+  f,
+  from_x=1, to_x = Inf,
+  from_y = function(x) -Inf, to_y = function(x) 1
+)$value
+
+#Solucion b
+integrate2_dydx(
+  f,
+  from_x=1, to_x = Inf,
+  from_y = function(x) x , to_y = function(x) Inf
+)$value
+
+
+```
+
+----
+
+Dos personas acuerdan encontrarse entre las 12:00 y las 12:30 con la condición
+de que nadie esperará más de 5 minutos por el otro. La probabilidad de que llegada
+para cada persona es uniforme entre las 12:00 y las 12:30. ¿Probabilidad de que se
+encuentren?
+
+```{r}
+# ??
+```
+
+---- 
+
+Supón que un ordenador depende de los componentes A y B, cuyas vidas respectivas
+X e Y se distribuyen conjuntamente con la función de densidad:
+\[
+  f(x, y)=\begin{cases}
+              e^{-y}  \qquad 0 < x < y< \infty \\
+              0 \qquad \text{otherwise}
+      \end{cases}
+\]
+
+Calcula la probabilidad de que B dure al menos tres unidades de tiempo más que A.
+
+```{r}
+# ??
+```
+
+Calcula la probabilidad de A y B duren ambos más de 2 unidades de tiempo.
+
+```{r}
+# ??
+```
+
+Calcula las funciones de densidad marginales.
+
+```{r}
+# ??
+```
+
+Calcula la función de densidad condicional para X si sabemos que B ha durado
+5 unidades de tiempo.
+
+```{r}
+# ??
+```
+
+Calcula la función de densidad condicional para Y si sabemos que A ha durado
+5 unidades de tiempo. ¿Cuál es la probabilidad de que B dure entre entre 4
+y 7 unidades de tiempo si A ha durado 5 unidades de tiempo?
+
+```{r}
+# ??
+```
+
+¿Cuál es el valor esperado para Y si X=5?
+
+```{r}
+# ??
+```
+
+----
+
+Tiramos dardos a una diana de radio 1 con centro en el origen. Los dardos impactan
+aleatoriamente en el punto $(X, Y)$. Supongamos que $(X, Y)$ se distribuye
+uniformemente en la diana. ¿Cuál es la distancia esperada al origen?
+
+```{r}
+# ??
+```
+

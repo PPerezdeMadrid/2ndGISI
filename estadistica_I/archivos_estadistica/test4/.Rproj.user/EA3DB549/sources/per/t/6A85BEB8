@@ -1,0 +1,28 @@
+{
+    "id": "6A85BEB8",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1672413195652.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "id": "3e5e6cd2e28b4131844a27672a8df0a8",
+        "name": "mujeres",
+        "title": "mujeres",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1948801658160,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1672413195652,
+    "read_only": false,
+    "read_only_alternatives": []
+}

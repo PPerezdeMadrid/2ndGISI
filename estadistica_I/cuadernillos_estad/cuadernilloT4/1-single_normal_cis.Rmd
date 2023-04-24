@@ -1,0 +1,208 @@
+---
+title: "4-Intervalos de confianza para una población Normal"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Intervalos de confianza para medias si la varianza es conocida
+
+--- 
+
+El fichero "iq.csv" contiene los resultados de un test de cociente intelectual (CI)
+realizado a una muestra de estudiantes de cierta universidad (con cientos de miles 
+de estudiantes matriculados). ¿Cuál es el cociente intelectual medio de los 
+alumnos de la universidad? Ten en cuenta que los tests de cociente intelectual 
+se diseñan para que la desviación estándar poblacional sea de 15 puntos.
+
+(Paso 1) Calcula la media muestral para el problema de los CIs.
+
+```{r paso_1}
+library(readr)
+iq <- read_csv("data_1/data_1/iq.csv")
+
+mean(iq$iq)
+n = nrow(iq)
+
+sigma = 15^2/n
+```
+
+(Paso 2) ¿Cuál es la distribución de $\bar{X}$? 
+
+Distribución normal
+
+(Paso 3a) Escribe matemáticamente la regla del 68-95-99 para nuestro estadístico $\bar{X}$.
+
+68 = P(mu, 15^2/100< X<mu, 15^2/100 )
+95 = P(mu, 2*sigma < X < mu, 2*sigma)
+99 = P(mu, 3*sigma < X < mu, 3*sigma)
+
+(Paso 3b) Halla $z_{\alpha/2}$ para un nivel de significación del 98\%.
+
+```{r paso_3b}
+# 0.01 - 0.98 - 0.01
+menos_z = qnorm(0.01)
+z = qnorm(0.99)
+```
+
+(Paso 4a) Despeja $\mu$ usando las inecuaciones del *paso 3* y empleando que
+$Z=\frac{\bar{X} - \mu}{15/10}$.
+
+P(-z < X - mu / (desv/raiz(n))) < z)
+mu < X +- z* desv/raiz n
+
+
+(Paso 4b) Halla un \textbf{intervalo de confianza} al 98\% para $\mu$ empleando que
+$\bar{x} = 99$.
+
+```{r paso_4b}
+mu1 = mean(iq$iq) - z * 15/sqrt(n)
+mu2 = mean(iq$iq) + z * 15/sqrt(n)
+
+c(mu1,mu2)
+```
+
+
+Halla un \textbf{intervalo de confianza} al 90\% para $\mu$ empleando que
+$\bar{x} = 99$
+
+```{r}
+#0.05-0.9-0.05
+z1 = qnorm(0.05)
+
+mu1 = mean(iq$iq) - z1 * 15/sqrt(n)
+mu2 = mean(iq$iq) + z1 * 15/sqrt(n)
+
+c(mu1,mu2)
+```
+
+
+
+# Intervalos de confianza para la varianza muestral
+
+Completa el siguiente código para verificar que $S^2$ es sesgado:
+
+"es sesgado" = ?????
+```{r}
+estimate_var <- function(x) {
+  0
+  #1 / length(???) * sum((x - ???) ^ 2)
+}
+
+replicate(
+  5,
+  mean(replicate(10000, {
+    samples <- rnorm(4, sd = 2)
+    estimate_var(samples)
+  }))
+)
+```
+
+Demuestra que $\hat{S}^2$ es insesgado con simulaciones (usa el anterior ejercicio
+como punto de partida).
+
+```{r}
+
+# ??
+```
+
+---
+
+Una máquina fabrica cierta pieza de un ordenador. El tamaño
+deseado de la pieza es de 5 cm. En el proceso de fabricación siempre hay circunstancias
+que no se pueden controlar, por lo que el tamaño de la pieza varía aleatoriamente.
+El proceso de fabricación está diseñado de forma que el tamaño de cualquier pieza 
+$X_i\sim \mathcal{N}(5, \sigma^2)$, aunque todavía no se conoce $\sigma^2$. Para ello, 
+se dispone de los datos almacenados en "pieces.csv". Halla un intervalo de confianza 
+al 99\% para $\sigma^2$.
+
+```{r}
+library(readr)
+pieces <- read_csv("data_1/data_1/pieces.csv")
+#Xi: N(5, sigma)
+#Quiero la VARIANZA MUESTRAL (sigma^2) --> chi-cuadrado
+
+#1º) Buscar el estadístico
+  # chi cuadrado --> (n-1)*S2 / sigma^2
+ S2=var(pieces$piece_size_cm)
+ n = 30
+ 
+#2º) Hallar la distribución de las muestras 
+    (n-1)*S2/sigma2
+      29 * S2 / sigma 
+
+#3º) Calcular el intervalo de confianza
+    
+    print("0.99=P(a<29*S2/sigma2<b) ")
+    a= qchisq(0.005, df= 29)
+    b = qchisq(0.995, df=20)
+    
+    sigma2_a = 29 * S2 / a
+    sigma2_b = 20*S2 / b
+    
+    c(sigma2_a, sigma2_b)
+    
+
+ 
+ 
+```
+
+
+# Intervalos de confianza para la media cuando la varianza es desconocida
+
+Nueva York es conocida como ``la ciudad que nunca duerme''. En cierta encuesta 
+se preguntó a una muestra aleatoria de 25 neoyorquinos cuánto tiempo dormían por 
+la noche. Los datos se encuentra en "new\_york.csv". ¿Apoyan los datos la afirmación 
+de que los neoyorquinos duermen menos de 8 horas por noche en promedio? Usa un 
+nivel de confianza del 96\%.
+
+```{r}
+#"apoyean los datos..." ==> hipótesis
+library(readr)
+new_york <- read_csv("data_1/data_1/new_york.csv")
+
+#1º) Formular hipótesis
+  #¿Que queremos demostrar?: mu_ny < 8
+  #H0: mu_ny > 8
+  #Ha: mu < 8
+
+#2º) Buscar el estadístico
+  #Media muestral con varianza desconocida --> T de Student 
+  #Para este ejercicio NO APLICARÉ T TEST
+
+hist(new_york$sleep_hours)
+  #Sigue una distribución normal
+  # se estudian 25 sujetos respecto a la enorme población de ny
+
+#3º) Realizar las pruebas del estadistico
+  # (X - mu)/(S/ raiz(n))
+  # S = sd, S^2 = var
+  
+  x_gorrito = mean(new_york$sleep_hours)
+  sd = sd(new_york$sleep_hours)
+  n = nrow(new_york)
+  
+  print("0.96=P(-t<(x_gorrito - mu)/(sd/sqrt(n) < t)")
+    #0.02 - 0.96 - 0.02
+    t = qt(0.02, df= n-1)
+    menos_t = qt(0.962, df= 24 )
+    
+    mu1 = x_gorrito -t * sd /sqrt(n)
+    mu2 = x_gorrito + menos_t * sd/sqrt(n)
+    c(mu2,mu1)
+
+```
+
+
+Resuelve el mismo ejercicio empleando la función \textit{t.test}.
+
+```{r}
+# Resolver con T test 
+  #Ha: mu < 8
+  t.test(new_york$sleep_hours, conf.level = 0.96, alternative = "less", mu = 8)
+
+```
+

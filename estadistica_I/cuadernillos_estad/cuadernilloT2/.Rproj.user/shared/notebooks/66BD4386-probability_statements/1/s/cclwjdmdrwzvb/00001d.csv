@@ -1,0 +1,4 @@
+"0","n_solucion = tabla[1, ] + 1
+"
+"2","Error in `[.default`(tabla, 1, ) : incorrect number of dimensions
+"

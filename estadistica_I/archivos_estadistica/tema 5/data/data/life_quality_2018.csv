@@ -1,0 +1,188 @@
+"geo","life_expectancy_years","income_dollars"
+"Afghanistan",58.7,1870
+"Albania",78,12400
+"Algeria",77.9,13700
+"Andorra",NA,51500
+"Angola",65.2,5850
+"Antigua and Barbuda",77.6,21000
+"Argentina",77,18900
+"Armenia",76,8660
+"Australia",82.9,45800
+"Austria",81.8,44600
+"Azerbaijan",72.3,16600
+"Bahamas",74.1,21900
+"Bahrain",77.2,44300
+"Bangladesh",73.4,3720
+"Barbados",76.8,16000
+"Belarus",73.8,17200
+"Belgium",81.2,42800
+"Belize",72.5,7710
+"Benin",65,2160
+"Bhutan",74.8,9930
+"Bolivia",74,6980
+"Bosnia and Herzegovina",77.9,12100
+"Botswana",66.9,16500
+"Brazil",75.7,14300
+"Brunei",77.4,76900
+"Bulgaria",75.3,18900
+"Burkina Faso",61.6,1710
+"Burundi",61.1,691
+"Cambodia",69.3,3830
+"Cameroon",61.2,3170
+"Canada",82.2,43800
+"Cape Verde",74.1,6420
+"Central African Republic",51.6,689
+"Chad",60.5,1860
+"Chile",80.7,23400
+"China",76.9,16000
+"Colombia",78.6,13700
+"Comoros",68,1440
+"Congo, Dem. Rep.",62.4,751
+"Congo, Rep.",63.9,5620
+"Costa Rica",81.4,16200
+"Cote d'Ivoire",61.2,3760
+"Croatia",77.7,22600
+"Cuba",79.3,20000
+"Cyprus",80.8,32200
+"Czech Republic",79.4,32300
+"Denmark",81.1,46600
+"Djibouti",67.1,3540
+"Dominica",NA,10600
+"Dominican Republic",76.1,15200
+"Ecuador",78.3,10200
+"Egypt",72.6,10800
+"El Salvador",75.8,8290
+"Equatorial Guinea",66.1,20500
+"Eritrea",64.6,1250
+"Estonia",77.7,29500
+"Ethiopia",66.4,1800
+"Fiji",65.8,9420
+"Finland",82.1,40300
+"France",82.6,39000
+"Gabon",67.3,17500
+"Gambia",67.8,1570
+"Georgia",74.3,10100
+"Germany",81.3,45200
+"Ghana",66.6,4380
+"Greece",81.3,25500
+"Grenada",71.9,13500
+"Guatemala",73.2,7530
+"Guinea",61.9,1280
+"Guinea-Bissau",59.7,1550
+"Guyana",68.2,7740
+"Haiti",64.5,1710
+"Honduras",73.1,4590
+"Hungary",75.9,26900
+"Iceland",82.6,47400
+"India",69.1,6890
+"Indonesia",72,11600
+"Iran",76.5,17400
+"Iraq",68,15900
+"Ireland",81.5,65600
+"Israel",82.4,33400
+"Italy",82.6,35200
+"Jamaica",75.2,8520
+"Japan",84.2,39100
+"Jordan",76.7,8450
+"Kazakhstan",72,24200
+"Kenya",67.3,3110
+"Kiribati",62.2,1890
+"Kuwait",80,68400
+"Kyrgyz Republic",71.5,3490
+"Lao",67.9,6310
+"Latvia",75.1,25500
+"Lebanon",80.5,13400
+"Lesotho",51.1,2960
+"Liberia",65.4,801
+"Libya",75.5,18300
+"Lithuania",75.3,30400
+"Luxembourg",82.4,99000
+"Macedonia, FYR",75.2,14000
+"Madagascar",63.4,1460
+"Malawi",61,1130
+"Malaysia",75.9,27200
+"Maldives",80.1,13000
+"Mali",62.9,2020
+"Malta",81.8,37900
+"Marshall Islands",NA,3780
+"Mauritania",70.6,3670
+"Mauritius",74.9,21000
+"Mexico",76.8,17300
+"Micronesia, Fed. Sts.",65.8,3410
+"Moldova",72.4,5330
+"Mongolia",68.7,12100
+"Montenegro",77.3,16600
+"Morocco",75.5,7720
+"Mozambique",61.1,1200
+"Myanmar",70.3,6100
+"Namibia",65.7,10500
+"Nepal",71.5,2420
+"Netherlands",81.9,48500
+"New Zealand",81.8,36400
+"Nicaragua",78.7,5470
+"Niger",62.5,949
+"Nigeria",66.1,5570
+"North Korea",71.1,1390
+"Norway",82.4,64800
+"Oman",78.1,38900
+"Pakistan",68,5220
+"Palestine",72.2,2700
+"Panama",79.4,23400
+"Papua New Guinea",61.1,2800
+"Paraguay",74.8,9280
+"Peru",80.2,12700
+"Philippines",70.5,7960
+"Poland",78.2,27700
+"Portugal",81.3,27900
+"Qatar",80.7,121000
+"Romania",75.5,23400
+"Russia",71.1,24800
+"Rwanda",68.3,1930
+"Samoa",72.4,5950
+"Sao Tome and Principe",70.9,3180
+"Saudi Arabia",77.6,50100
+"Senegal",66.8,2570
+"Serbia",76.2,14800
+"Seychelles",74.2,27500
+"Sierra Leone",60,1490
+"Singapore",84,83900
+"Slovak Republic",77.2,31400
+"Slovenia",81.1,30900
+"Solomon Islands",63.6,2110
+"Somalia",58,629
+"South Africa",63.5,12300
+"South Korea",81.3,36800
+"South Sudan",60.7,1820
+"Spain",83.2,34700
+"Sri Lanka",77.8,12400
+"St. Lucia",76.6,10900
+"St. Vincent and the Grenadines",72,11400
+"Sudan",68.8,4440
+"Suriname",71.6,13200
+"Swaziland",58.6,7600
+"Sweden",82.4,47500
+"Switzerland",83.5,57100
+"Syria",69.8,2900
+"Tajikistan",72.2,2920
+"Tanzania",65.5,2780
+"Thailand",78.2,16900
+"Timor-Leste",73.3,1490
+"Togo",63.1,1480
+"Tonga",70.7,5500
+"Trinidad and Tobago",73.4,30300
+"Tunisia",78,11600
+"Turkey",79.6,24900
+"Turkmenistan",70.5,17900
+"Uganda",62.9,1820
+"Ukraine",72.3,8330
+"United Arab Emirates",76.9,68200
+"United Kingdom",81.2,40100
+"United States",79.1,54900
+"Uruguay",77.6,21300
+"Uzbekistan",70.5,6690
+"Vanuatu",64.3,2900
+"Venezuela",75.9,14200
+"Vietnam",74.9,6550
+"Yemen",67.1,2430
+"Zambia",59.5,3860
+"Zimbabwe",60.2,1950

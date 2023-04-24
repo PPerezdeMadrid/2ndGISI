@@ -1,0 +1,16 @@
+"0","sims = replicate ( 1000, {
+    simsA = rnorm(100, mean=100, sd=3)
+    simsB= rnorm(20, mean=99.8, sd=1.2)
+    
+    simsA_z = (simsA - mean(simsA)/sd(simsA) * 3)
+    simsB_z = (simsB - mean(simsB)/sd(simsB)* 1.2)
+    
+    var.test(simsB_z, simsA_z)$p.value
+})
+
+mean(sims)
+"
+"1","[1]"
+"1"," 0.0006962364"
+"1","
+"

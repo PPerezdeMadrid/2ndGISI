@@ -1,0 +1,458 @@
+---
+title: "Test de hipótesis para una población normal"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introducción y test de hipótesis de dos colas
+
+### Homeopatía y pérdida de peso
+
+Un producto homeopático afirma que **"gracias a su uso, perderás 2 Kg en dos semanas"**.
+
+Escéptico ante esta afirmación, reclutas a 50 personas de tu ciudad para participar
+en un experimento. Las personas usan el producto homeopático durante dos semanas
+y reportan su pérdida de peso (por ejemplo, $x_i=3$ significaría que se han perdido
+3 Kg, mientras que $x_i=-3$ significaría que se han ganado 3). Datos en 
+"homeo\_weight\_loss.csv".
+
+En base a los datos, ¿es creible la afirmación del producto homeopático? Por sencillez, 
+asume que la pérdida de peso tiene desviación típica poblacional $\sigma=2.5$.
+
+```{r}
+library(readr)
+library("ggplot2")
+homeo_weight_loss <- read_csv("data_2/data_2/homeo_weight_loss.csv")
+#View(homeo_weight_loss)
+media_muestral = mean(homeo_weight_loss$weight_loss_Kg)
+
+# 1) HIPÓTESIS
+  # H0: gracias a su uso, perderás 2kg
+  #Ha, H1: el uso del producto no conlleva pérdida de 2kg
+
+  #H0: mu = 2 (mu es la pérdida de peso medio)
+  #Ha: mu != 2
+
+#2) Buscamos un estadístico de contraste
+  #para adivinar mu, usamos X_gorrito
+  #X_gorrito ¿? --> N(media, sd^2/n) 
+  #Es independiente --> población infinita (muestra pequeña respecto a la población)
+
+  #Observamos histograma --> vemos si tiene distribución normal
+  num_bins=nclass.FD(homeo_weight_loss$weight_loss_Kg)
+  ggplot(homeo_weight_loss, aes(x= weight_loss_Kg)) + geom_histogram(bins = num_bins)
+  # Observo que X es normal y como se cumplen ambas condiciones:
+  # X_gorrito ¬ N(media, sd^2/n)
+  
+  #Bajo la H0 (asimos cierta): X_gorrito ¬ N(2, (2,5^2)/50)
+  
+#3) Calculamos p-valor (confrontar datos vs H0)
+  #a) de forma gráfica (dibujar distrib normal N(2, (2,5^2)/50) )
+    eje_x = seq(0,5, by = 0.01) #porque se q va a estar centrada en 2
+    eje_y = dnorm(eje_x , mean = 2, sd= sqrt(2.5 ^2 / 50))
+    plot(eje_x, eje_y, type = "l")
+    
+    x_mean = mean(homeo_weight_loss$weight_loss_Kg) #0.037
+    #Dibujamos una linea vertical en 0.037
+    abline(v = x_mean, col = 2)
+  #¿ES PROBABLE OBTENER ROJO SI NEGRO ES CIERTO?
+    
+  #b) calculamos p-valor: prob de obtener un evento tan o más extremo que el observado
+      #evento observado: 0.037 
+      #más extremo que 0.037--> más a la izq
+       abline(v = 4 - x_mean, col = 2) #tb muy extremo si están a la dcha
+  
+      #P(X_gorrito < 0.037 o x > 4-0.037)
+      # 2 * P(X_gorrito < 0.037 o x > 4-0.037)
+      #multiplicamos por dos porqq la probabilidad de la izq es la misma que la de la dcha
+       p_valor = 2 * pnorm(0.037, mean = 2, sd= sqrt(2.5 ^2 / 50) )
+       
+       
+#4) comparamos el p-valor con un umbral llamado nicel de significancia: alfa
+    #Siginficancia alfa: 0.01
+       #Forma antigua de presentarlo:
+        # Si p-valor < 0.01 ==> Aceptamos H1, rechazamos H0 
+        # Si p-valor < 0.01 ==> Aceptamos H0, rechazamos H1
+           
+       #Forma moderna de analizarlo:
+        # Si p-valor < 0.01 ==> los datos apoyan la H1 mientras que la H0 es poco veraz
+        # Si p-valor > 0.01 ==> los datos no apoyan la H1 / no hay suficiente evidencia...
+
+print (
+  "En este caso los datos apoyan que mu != 2kg (NO vas a perder 2kg) "
+)
+
+```
+
+### Homeopatía y pérdida de peso: T-test
+
+En el ejercicio anterior hemos asumido que $\sigma$ es conocida. Como sabemos,
+esto ocurre muy rara vez en la práctica.
+
+Repite el test de hipótesis para el problema de la pérdida de peso si $\sigma$
+es desconocida. ¿Cuál sería tu conclusión?
+
+```{r}
+# ---------SIGMA NO ES CONOCIDA --------
+#1) 
+  #H0: mu = 2 (mu es la pérdida de peso medio)
+  #Ha: mu != 2
+
+#2) Distribucion de estadsitico (mirar en la tabla)
+  # X_gorrito es una T de Student
+  # Asunciones acerca de Normalidad y pobl infinita 
+  # Podemos calcular T de Students --> t.test
+
+  t.test(homeo_weight_loss$weight_loss_Kg)
+    #p_value = 0.9215 (apoya la hipotesis nula)
+    # Hipotesis alternativa: verdadera pero mu != 2
+  
+  t.test(homeo_weight_loss$weight_loss_Kg, mu = 2)
+    # como p-value es muy pequeño, HIpotesis alternativa bien
+    # Los datos apyan la hipótesis alternativa 
+  
+```
+
+CUando no dabemos la varianza --> Utilizamos T de Student 
+
+```{r}
+x_mean = mean(homeo_weight_loss$weight_loss_Kg)
+x_sd=sd(homeo_weight_loss$weight_loss_Kg)
+n = nrow(homeo_weight_loss) #num de muestras
+
+#2) Calculamos el estadístico de contraste (asumiendo q H0 es cierta)
+    mu = 2
+    t_contraste = (x_mean - mu) / (x_sd / sqrt(n))
+    
+    eje_x = seq(-6,6, by=0.1)
+    plot(eje_x, dt(eje_x, df = n-1), type = "l")
+    abline( v = t_contraste, col=2, lwd=2)
+    
+    t.test(homeo_weight_loss$weight_loss_Kg, mu = 2)
+    # T = -5.2553 --> t_contraste (estadístico)
+    
+#3) Calcular a partir de TContraste p-valor 
+       ?pt #(calcula la probabilidad a la izq de la línea roja)
+       p_valor = 2 * pt(t_contraste, df = n-1)
+       
+       #Como p-valor es muy pequeño, Ha es verdadera
+```
+
+
+### $H_0$ no demuestra nada
+Interpreta el siguiente fragmento de código...
+
+```{r}
+set.seed(42)
+x <- rnorm(30, mean = 0, sd = 5)
+print(c(
+  t.test(x, mu = 1)$p.value,   #H0: mu=1, Ha: mu!=1
+  t.test(x, mu = -1)$p.value   #H0: mu=-1, Ha: mu!=-1
+))
+```
+Hipotesis alternativa es falsa --> no implica que la hipotesis 
+                                    nula es verdadera
+
+### Es posible cometer errores en los test de hipótesis (conclusiones incorrectas)
+```{r}
+set.seed(4)
+x <- rnorm(30, mean = 0, sd = 5) #normal cuya media = 0
+print(
+  t.test(x, mu = 0)$p.value      #H0: mu = 0, Ha != 0
+                        
+)
+#Datos demuestran que la media es != 0 (ERROR)
+```
+
+### Interpretación de $\alpha$
+Completa el siguiente fragmento de código para verificar la siguiente interpretación
+de $\alpha$: Si repetimos el test muchas veces,
+**rechazaremos la $H_0$ siendo esta correcta un $\alpha$\% de veces**
+
+```{r}
+N <- 5000
+alpha <- 0.05 #Falla 5% de las veces 
+
+sims <- replicate(N, {
+  # H0: mu = 0
+  x <- rnorm(100, mean = 0)            # Genera muestras de H0 (H0 es correcta)
+  test <- t.test(x, mu = 0)$p.value # Testea H0
+  # Añade condición de éxito para calcular la probabilidad de
+  # "Rechazar H_0 a pesar de ser correcta"
+  pvalor=test
+  pvalor<alpha
+})
+print(paste("alpha =", alpha, "| p(incorrectly reject H0) = ", mean(sims)))
+  # Es considerar verdadera la hipotesis alternativa un 0.05% de las veces y sea falsa
+  # conclusión, disminuye alpha
+```
+
+
+```{r}
+alpha =0.05 #Falla 5% de las veces 
+
+sims <- replicate(5000, {
+  # H0: mu = 0
+  x <- rnorm(100, mean = 0)            # Genera muestras de H0 (H0 es correcta)
+  pvalor <- t.test(x, mu = 0)$p.value     # Testea H0
+  pvalor<alpha # "Rechazar H_0 a pesar de ser correcta"
+})
+print(paste("alpha =", alpha, "| p(incorrectly reject H0) = ", mean(sims)))
+```
+
+# Test de hipótesis de una sola cola y tamaño del efecto
+S
+### Test de una sola cola 
+Un producto homeopático afirma que "gracias a su uso, perderás **al menos** 2 Kg en dos semanas"...
+¿Es creíble esta afirmación?
+
+```{r}
+
+x_mean = mean(homeo_weight_loss$weight_loss_Kg)
+x_sd=sd(homeo_weight_loss$weight_loss_Kg)
+n = nrow(homeo_weight_loss) #num de muestras
+t_contraste = (x_mean - mu) / (x_sd / sqrt(n))
+
+# 1) HIPÓTESIS
+  #(antes)
+   #H0: mu = 2 (mu es la pérdida de peso medio)
+  #Ha: mu != 2
+
+  #(ahora)
+  #H0: mu >= 2 (mu es la pérdida de peso medio)
+  #Ha: mu < 2
+
+#2) Buscamos un estadístico de contraste
+  # T de Student:
+    my_test = t.test(homeo_weight_loss$weight_loss_Kg,
+                   alternative = "less",
+                   mu = 2)
+  #alternative: two.sided ("dos colas), less ("menor"), greater("mayor")
+  
+#3) Calculamos p-valor (confrontar datos vs H0)
+  p_valor = my_test$p.value
+  p_valor2 = pt(t_contraste, df = n-1) #NO hace falta multiplicar por 2
+       
+#4) comparamos el p-valor con un umbral llamado nicel de significancia: alfa
+    #Aceptamos H1 
+  
+#--------------DIBUJAMOS------------------
+    eje_x = seq(-6,6, by=0.1)
+    plot(eje_x, dt(eje_x, df = n-1), type = "l")
+    abline( v = t_contraste, col=2, lwd=2)
+```
+
+A este tipo de problemas se les conoce como **hipótesis de una sola cola**
+(Vs. **hipótesis de dos colas**).
+
+### Fármaco para pérdida de peso
+Gracias a tu éxito con el análisis del producto homeopático, una farmacéutica
+interesada en desarrollar un fármaco para la pérdida de peso te contrata.
+La empresa quiere comercializar su (carísimo) producto con un eslogan del tipo
+"Hay evidencia científica de nuestro producto te hará perder peso si lo usas dos meses".
+
+Te facilitan los datos de "pharma\_weight\_loss.csv". ¿Hay suficiente evidencia
+de que el fármaco te hace perder peso? (Usa $\alpha=0.05$.)
+
+```{r}
+library(readr)
+pharma_weight_loss <- read_csv("data_2/data_2/pharma_weight_loss.csv")
+install.packages("ggplot2")
+library("tidyverse")
+
+# 1) HIPÓTESIS
+  #H0: mu < 0 (ganas peso)
+  #Ha: mu > 0 (pierde peso)
+
+#2) Buscamos un estadístico de contraste
+  # X_gorrito es una T de Student
+  # Asunciones acerca de Normalidad y pobl infinita 
+  # Podemos calcular T de Students --> t.test
+
+  num_bins = nclass.FD(pharma_weight_loss$weight_loss_Kg)
+  ggplot(pharma_weight_loss, aes( x= weight_loss_Kg)) + geom_histogram(bins = num_bins)
+  #Distribución normal + población infinita --> T de Student
+  
+  my_test = t.test(pharma_weight_loss$weight_loss_Kg,
+                   alternative = "greater",
+                   mu = 0)
+  
+  
+#3) Calculamos p-valor (confrontar datos vs H0)
+  pvalor = my_test$p.value
+  
+#4) comparamos el p-valor con un umbral llamado nivel de significancia: alfa
+    alpha = 0.05
+    pvalor < alpha #TRUE
+      
+     #los datos apoyan la hipótesis alternativa, luego se pierde peso
+        
+```
+¿Tú crees que alguien comprará el producto?
+**No hay que confundir la significancia estadística con la relevancia práctica**.
+Para esto último debemos usar **ICs** o **el tamaño del efecto**.
+
+### Tamaño del efecto
+Calcula el tamaño del efecto para el problema del fármaco. ¿Cómo lo interpretas?
+Usa la siguiente [tabla]{https://imaging.mrc-cbu.cam.ac.uk/statswiki/FAQ/effectSize}.
+
+```{r}
+#Tamaño del efecto: calcula la relevancia del resultado
+  #num pequeños --> poco relevantes
+  weight = pharma_weight_loss$weight_loss_Kg 
+  cohens_d =  mean(weight)/sd(weight)
+  #¿0.108571 nº pequeño?
+  #no tenemos porq saber programarlo --> utilizamos librería
+
+#install.packages("effectsize")
+library("effectsize")
+effectsize(my_test)
+#consultamos tabla --> Cohen's d (t-tests): Small: 0.2 Medium: 0.5 Big: 0.8
+print(
+  "El tamaño del efecto es pequeño ya que 0.11<0.2,
+  el resultado es poco relevante"
+)
+
+my_test
+# Vemos q el nivel de confianza va de 0.055 a Inf --> De una cola
+# Estamos al 95% seguros que la pérdida de peso media es superior a 0.055
+ 
+
+
+```
+
+Siempre que hagas un test de medias, 
+**usa el tamaño del efecto o ICs para complementar los p-valores**.
+
+¿Cómo reportar resultados?
+
+Los datos apoyan que hay una pérdida de peso gracias al uso del producto,
+(p-valor = 0.003). Sin embargo, el tamaño del efecto es pequeño, luego los
+resultados son poco relevantes (la pérdida de peso es poco relevante).
+(Con 95% de confianza, la pérdida > 0.05kg)
+
+### ICs unilaterales
+Calcula el **IC unilateral** asociado al test.
+
+```{r}
+# ??
+```
+
+### Test para la varianza
+Los test de cociente intelectual (CI) están diseñados para que la desviación típica
+poblacional sea de 15 puntos. Sin embargo, en los procesos de traducción de
+un test "oficial" de CI pueden surgir desajustes.
+
+Por ejemplo, "iq\_spanish.csv" tiene los resultados de un test de CI
+traducido del inglés al español. ¿Hay evidencia de que la desviación típica
+es distinta de 15 y de que, por tanto, debe revisarse la traducción? Usa un nivel
+de significación del 5\%.
+
+```{r}
+library(readr)
+iq_spanish <- read_csv("data_2/data_2/iq_spanish.csv")
+
+# 1) Hipótesis
+  #H0: var = 15^2
+  #Ha: var != 15^2
+
+#2) Estadistico de contraste
+ sigma =  sd(iq_spanish$iq)
+ var_muestral = var(iq_spanish$iq)
+ 
+ library(ggplot2)
+ ggplot(iq_spanish, aes(x=iq)) + geom_histogram(bins = nclass.FD(iq))
+ #Distrib Normal + población infinita
+ 
+ # 3) 
+ valor_estadistico_datos = 29 * var_muestral/(15^2)
+  
+    n = nrow(iq_spanish)
+     #valor estadistico en base a datos es 50 
+    #(irá más o menos en el centro) asiq pondremos como 100 de numero 
+    eje_x = seq(0,100, by=0.1)
+    plot(eje_x, dchisq(eje_x, df = n-1), type = "l")
+    abline (v = valor_estadistico_datos , col = 2 )
+    
+    #Tenemos q cuantificar como de raro es: 
+    pvalor = 2*(1-pchisq(valor_estadistico_datos, df = n-1))
+    
+  # 4) debo usar un alpha = 0.05%
+    alpha = 0.05
+    resultado = pvalor<alpha
+    
+    ifelse(resultado == TRUE , 
+        print("Los datos apoyan la hipotesis alternativa (revisar traducción"), 
+        print ("Rechazamos la hipotesis alternativa ") )
+           
+```
+
+Lo razonable sería repetir el experimento con más muestras. Ahora bien,
+¿con cuántas?
+
+
+### Potencia de un test
+Como $\hat{s}^2=388.6902$, escribe una función que calcule la probabilidad de
+rechazar $H_0$ si $\sigma^2=388.6902$ para un número de muestras $n$. Completa
+el siguiente código:
+
+```{r}
+power_var_test <- function(n, H0_sigma2 = 15 ^ 2, true_sigma2 = 388.6902,
+                           significance = 0.05, N = 5000) {
+  sims = replicate(N, {
+    data = rnorm(n, sd = sqrt(true_sigma2)) #[datos donde Ha es cierta]
+    var_stat = (n-1) * var(data)/ ( H0_sigma2) # chi-cuadrado
+    p_value = 2*(1-pchisq(var_stat, df = n-1))
+    p_value < significance #TRUE si rechazo H0 (acepto Ha)
+  })
+  mean(sims) #P(aceptar Ha | Ha sea cierta (sigma2 = 388.6902))
+}
+
+power_var_test(10) #10 muestras --> solo acertaré el 0.27%
+
+#------------HALLAR NUM DE MUESTRAS---------------------
+  #power_var_test(¿?) > 0.9
+  power_var_test = Vectorize(power_var_test)
+  posibles_num = seq(10,80, by=10)
+  power_values = power_var_test(posibles_num)
+  
+  plot(posibles_num, power_values, type="o")
+  abline(h=0.9, col = 2, lty=2) #línea en y=0.9
+  
+  print("Habría que repetir el estudio con unas 70 muestras")
+  
+
+```
+
+### Potencia de un test: tamaño de la muestra
+Halla ahora el número de muestras necesarias para obtener una potencia de test
+del 90\%.
+
+```{r}
+# ??
+```
+
+### Potencia del T-test: número de muestras
+Según la estadísticas oficiales, la media de peso de las mujeres de cierto país
+es de 63.5 Kg (con desviación típica 4.1). Sin embargo, un equipo de 
+investigadores cree que debido a cambios en la alimentación la media se ha 
+incrementado. ¿Cuántas muestras necesitarán para poder detectar un incremento de
+medio Kg con un nivel de significación del 1\% y una potencia del 90\%? Usa 
+*power.t.test*.
+
+```{r}
+power.t.test(delta = 0.5, #diferencia en las medias q queremos detectar 
+            #(Cuando quier demostrar un cambio más pequeño--> necesito más muestras)
+             sd = 4.1,       #desviación típica
+             sig.level=0.01, #Nivel de significacion
+             power=0.9,      #Detectar esos cambios en el 90% de los casos
+             type = "one.sample",  # "one.sample" solo está haciendo referencia a una población
+             alternative ="one.sided" ) #Ha de una o dos colas (una cola, Ha = mu > 63.5)
+
+
+print("nuestro estudio deberia correrse con 878 muestras")
+```

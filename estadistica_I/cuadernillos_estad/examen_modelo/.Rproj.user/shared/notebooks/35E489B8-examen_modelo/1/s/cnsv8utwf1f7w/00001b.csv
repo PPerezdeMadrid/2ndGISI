@@ -1,0 +1,2 @@
+"0","ggplot(iris, aes(x=Sepal.Length, y =Petal.Length, col = Species))+ stat_summary() +"
+"0","  stat_summary(geom = 'line', aes(y=Petal.Length))"

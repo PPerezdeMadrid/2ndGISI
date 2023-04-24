@@ -1,0 +1,4 @@
+"0","#P(X=x) = choose(n x)* p^x * (1-p)^n-x"
+"0","prob_de_x = function(x, n, p){"
+"0","  choose(n, x)* p^x * (1-p)^(n-x)"
+"0","}"

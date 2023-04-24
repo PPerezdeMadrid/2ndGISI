@@ -1,0 +1,395 @@
+---
+title: "Intervalos de confianza y test de hipótesis para dos poblaciones normales"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Comparaciones de medias en poblaciones normales
+## Varianzas totalmente desconocidas
+
+### Diferencias por sexos
+Los datos contenidos en "howell1.csv" son datos censales parciales del
+área !Kung San compilados a partir de entrevistas realizadas a finales de la década
+de 1960. ¿Depende la altura de los !Kung adultos del sexo del inviduo? ($\alpha=0.01$). 
+
+Apoya tus resultados con un gráfico y calcula el tamaño del efecto. Emplea 
+los datos en "howell1.csv".
+
+X: altura de un hombre adulto
+Y: Altura de una mujer adulta
+
+La altura se asume que es una distribución normal 
+  X-N(mu_x, sigma_y)
+  X-N(mu_x, sigma_y)
+
+¿depende la altura del texto?
+mu_x = mu_y --> mu_x - mu_y  = 0 [ H0 ]
+mu_x != mu_y --> mu_x - mu_y != 0 [ Ha ]
+
+¿Que estadístico para la media si no conocemos las varianzas poblacionales?
+[miramos chuletario] T de Students (
+  *Distrib. normal (por separado)
+  *indep de muestras para x e y
+  *indep entre X e Y
+
+```{r}
+library("tidyverse")
+library("effectsize") #necesaria para medias
+
+#Tenemos q cambiar el delimitador --> a ; 
+library(readr)
+howell <- read_delim("data_3(1)/data_3/howell1.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+library("ggplot2")
+
+#Tenemos que filtrar datos --> SOLO ADULTOS (edad>18)
+howell_adult = howell[howell$age >= 18, ]
+numbins = nclass.FD(howell_adult$height)
+ggplot(howell_adult, aes(x =height )) + geom_histogram(bins = numbins)
+# tiene una DISTRIB NORMAL
+
+#Diferenciar  MUJERES y HOMBRES
+#Los datos categóricos se deben codificar como factores
+  #Columna "male": si es hombre 1, sino 0
+  #Tengo q convertir mi columna "male" a tipo factor
+howell_adult$male = as.factor(howell_adult$male)
+ggplot(howell_adult, aes(x =height, col=male)) + geom_histogram(bins = numbins)
+
+#Nueva geometría: densidad (para representar mejor dos poblaciones)
+ggplot(howell_adult, aes(x =height, col=male)) + geom_density()
+print("ambos datos tienen una distribución normal")
+
+#Comprobar independencia para cada población
+  #Población infinita o muestreo sin reemplazamiento
+nrow(howell_adult) #352 muestras
+print("puesto q 350 personas << población objetivo, luego asumimos independencia")
+
+#Comprobar independecia X entre Y
+print("es razonable asumir que la altura de los hombres no afecta a la de las mujeres")
+
+#Ha: mu_x != mu_y --> mu_x - mu_y != 0 (dos colas)
+  men = howell_adult[howell_adult$male == 1, ]
+  women = howell_adult[howell_adult$male == 0, ]
+  
+  
+my_test = t.test(men$height, women$height, 
+       alternative = "two.sided",
+       mu = 0) #IMPORTA el orden de los datos
+my_test
+
+#Si damos primero women$ y después men$ nos dará la media en negativo
+
+print("pvalor es muy muy bajo, los datos apoyan Ha")
+print("Los datos apoyan que la altura de los hombres es distinta a la de las mujeres")
+
+#el intervalo de confianza; es una estimación  entre las diferencias de alturas
+print("La altura de los hombres está entre 9.5 y 12cm más que la de las mujeres")
+
+#CALCULAR EL TAMAÑO DEL EFECTO 
+effectsize(my_test)
+#tamaño del efecto: cohens_d = 1,95[tamaño grande según enlace]
+print("puesto que el tamaño del efecto es muy grande, 
+      los resultados son MUY RELEVANTES")
+
+
+```
+
+un-pooled SD (desviación típica no agrupada):
+* coger los datos X --> sd(X) , uso n_x datos para la estimación
+* coger los datos y --> sd(Y) , uso n_y datos para la estimación
+
+Existe un caso donde es posible hacerlo mejor:
+    si estoy seguro de q sd(x) = sd(y) una estrategia más inteligente es combinar los datos de     x e y para estimar sigma de X [puedo usar más datos y eso es mejor]
+
+
+## Varianzas desconocidas pero iguales
+### Varianzas  pero iguales
+Repite el ejercicio relativo a los !Kung adultos si se puede asumir que 
+la desviación típica poblacional para hombres y mujeres es la misma 
+($\sigma_h = \sigma_m$).
+
+```{r}
+library("tidyverse")
+library("effectsize") #necesaria para medias
+
+#Tenemos q cambiar el delimitador --> a ; 
+library(readr)
+howell <- read_delim("data_3(1)/data_3/howell1.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+library("ggplot2") 
+
+my_test2 = t.test(men$height, women$height, alternativa = "two.sided", var.equal = TRUE) 
+      # var.equal = asumo q las desviaciones típicas son las mismas
+my_test2
+
+effectsize(my_test2)
+#Estimated using pooled SD
+
+```
+*EJERCICIO EXTRA*
+Codifica la siguiente hipótesis:
+¿Hay evidencia de que los hombres miden al menos 10cm más que las mujeres?
+```{r}
+
+library("tidyverse")
+library("effectsize") 
+library(readr)
+howell <- read_delim("data_3(1)/data_3/howell1.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+
+library("ggplot2")
+
+#H0:  mu_x - mu_y < 10
+#Ha: mu_x - mu_y >= 10
+
+
+howell_adult = howell[howell$age >= 18, ]
+howell_adult$male = as.factor(howell_adult$male)
+ggplot(howell_adult, aes(x =height, col=male)) + geom_density()
+print("ambos datos tienen una distribución normal")
+
+#Comprobar independencia para cada población
+nrow(howell_adult)
+print("puesto q 350 personas << población objetivo, luego asumimos independencia")
+
+#Comprobar independecia X entre Y
+print("es razonable asumir que la altura de los hombres no afecta a la de las mujeres")
+
+#Ha: Ha: mu_x - mu_y >= 10  (una cola)
+  men = howell_adult[howell_adult$male == 1, ]
+  women = howell_adult[howell_adult$male == 0, ]
+  
+  
+my_test = t.test(men$height, women$height, 
+       alternative = "greater",
+       mu = 10) 
+my_test
+
+#Si damos primero women$ y despues men$ nos dará la media en negativo
+
+print("pvalor es muy muy bajo, los datos apoyan Ha")
+print("Los datos apoyan que la altura de los hombres es distinta a la de las mujeres")
+
+#el intervalo de confianza; es una estimación  entre las diferencias de alturas
+print("La altura de los hombres está entre 9.66 y 12cm más que la de las mujeres")
+print("Luego rechazamos la Ha ")
+
+#CALCULAR EL TAMAÑO DEL EFECTO 
+effectsize(my_test)
+#tamaño del efecto: cohens_d = 1,95[tamaño grande según enlace]
+print("puesto que el tamaño del efecto es muy grande, 
+      los resultados son MUY RELEVANTES")
+
+
+```
+
+
+## Datos apareados
+### Datos apareados
+Unos científicos examinaron la función de la vesícula biliar antes y 
+después de una cirugía  para detener el reflujo. Los autores midieron 
+la funcionalidad de la vesícula biliar calculando la fracción de eyección de
+la vesícula biliar (GBEF) antes y después de la operación. El objetivo de la 
+operación es aumentar la GBEF. ¿Hay evidencia para concluir que la operación 
+aumenta el GBEF? Datos en "gbef\_long.txt" (o "gbef.txt", para un reto).
+
+```{r}
+# ??
+library("tidyverse")
+library("effectsize")
+#renombramos cambiando su extension a csv + delimitador a whitespace
+library(readr)
+gbef_long <- read_table("C:/Users/ppere/Desktop/2ndo_carrera/estadistica_I/archivos_estadistica/tema_4/data_3(1)/data_3/gbef_long.csv") 
+colnames (gbef_long)= c("ID", "class", "gbef") #Quitar dobles comillas
+
+# X:"antes de operarse"
+# Y: "después de operarse"
+# Son dependientes, el gbef antes depedende del gbef de después
+
+#3 Asunciones:
+#   - Indep entre si [NO se cumple]
+#   - Muestreo dentro de cada poblacion es aleatorio (pobl inf)
+#   - NOrmalidad de las poblaciones
+
+ 
+#------Es un caso especial: datos apareados---------
+# Medimos algo --> hacemos algo --> repetimos
+
+#tengo dos medidas para el individuo--> vamos a crear otra variable
+gbef_long_preop = gbef_long[gbef_long$class =="\"Preop\"", ] 
+gbef_long_postop = gbef_long[gbef_long$class =="\"Postop\"", ]
+
+dif_despues_antes = gbef_long_postop$gbef - gbef_long_preop$gbef #resta de gbef
+hist(dif_despues_antes)
+#comparar incremento y decremento para cada uno de los individuos
+
+# 1) Formular hipótesis
+    #Ha: mu_postop > mu_preop --> mu_postop - mu_preop > 0 
+    #  : dif_despues_antes > 0
+    #H0: dif_despues_antes < 0
+
+# 2) Discutir las asunciones
+#   (si datos apareados --> no discutimos indep de poblaciones)
+    #Muestras indep/población infinita
+      #Num de pacientes<<< Pacientes Potenciales 
+    #Normalidad (en datos apareados comprobamos normalidad sobre las diferencias)
+      hist(dif_despues_antes)
+      #PODEMOS asumir normalidad
+      
+# 3) Aplico t.test 
+      #Ha: : dif_despues_antes > 0
+      t.test(dif_despues_antes, alternative = "greater", mu = 0)
+      
+      #Ha: mu_postop > mu_preop --> mu_postop - mu_preop > 0 
+       t.test(gbef_long_postop$gbef,  gbef_long_preop$gbef,
+             alternative = "greater", mu = 0, 
+             paired = TRUE #Datos apareados 
+             )
+# Calcular el tamaño del efecto con alpha = 0.01%
+      my_test =  t.test(dif_despues_antes, 
+                        alternative = "greater", mu = 0, 
+                        conf.level = 0.99)
+         effectsize(my_test)
+      
+print("los datos no apoyan suficiente evidencia que la operación 
+      aumenta el GBEF (nivel significación < pvalor)
+      Aunque no lo apoyen el tamaño del efecto es medio
+      (incremento medio: 18.075" )
+
+      #es cierto que aumenta el gbef con una media de 18.075, 
+      #pero no podemos descartar que la operacion no aumente
+      #el GBEF, es posible que la operación no aumente el GBEF
+
+print ("Si quisiesemos estar al 95% seguros (alpha=0.5) el 
+       estudio saldría válido")
+
+#------RECOMENDAMOS MÁS MUESTRAS -----------
+#alpha = 0.01 y potencia del 0.9
+  power.t.test(delta = 18.075,
+               sd = sd(dif_despues_antes),
+               sig.level = 0.01,
+               power = 0.9,
+               type = "one.sample",
+               alternative = "one.sided")
+print("Deberiamos repetir la prueba con unos 46 individuos")
+
+```
+
+# Comparaciones de varianzas
+
+### Comparaciones de varianzas
+En una empresa, se están comparando dos métodos de producción de cierto chip 
+(A, mucho más barato, y B). La potencia media consumida por ambos chips es 
+idéntica, si bien los dos métodos tienen distinta variabilidad. Se obtienen 
+dos muestras de tamaño 16 y 10 y sus varianzas muestrales son
+$24$ y $18$ (en Watts$^2$). Usando un nivel de confianza del 98\%, ¿qué método 
+es preferible? Usa la función *var.test*.
+
+```{r}
+#A: Potencia de los chips A~N(mu, sigma_a)
+#B: Potencia de los chips B~N(mu, sigma_b)
+#Poca varianza --> resultado de los chips es predecible (es mejor!!)
+
+# 1) Calcular intervalo de confianza [pq no hay hipotesis]
+  
+# 2) Asunciones Normalidad + indepencia entre poblaciones + indep entre muestras
+    #Asumo Normalidad
+    #Indep entre poblaciones: mñetodo de fabricación A no influye en B
+    #Indep entre muestras: 16 y 10 <<<< cantidad que fabrican en total
+
+# 3) var.test 
+    # x = datos de A , y = datos de B
+    # 3.1) Vamos a generar datos cuya media y varianza muestral 
+    #      cuadren con los datos del enunciado
+
+    #reto; generar 16 muestras normales de media 3 y varianza 24 (tino)
+    sim = rnorm(16, mean = 3, sd=sqrt(24))
+    #Estandarizar simulaciones:
+    sim_z = (sim - mean(sim))/sd(sim)
+    sim_z
+    mean(sim_z) #mas o menos 0
+    mean(sim_z)+3 #Tengo datos de media 3
+    var(sim_z * sqrt(24)) #datos para la varianza 24
+    
+     #Estandarización para este problema en concreto
+     sim_majas = sim_z * sqrt(24) + 3
+    
+    #A: 16 muestras de var 24
+    #B: 10 muestras de var 18
+     # Para calcular var(a)/var(b)--> var.test(a,b)
+     
+    
+      sim_a = rnorm(16, sd=sqrt(24))
+      sims_zA = (sim_a - mean(sim_a))/sd(sim_a)* sqrt(24)
+    
+      sim_b = rnorm(10, sd=sqrt(18))
+      sims_zB = (sim_b - mean(sim_b))/sd(sim_b)* sqrt(18)
+     
+     var.test(sims_zA, sims_zB, conf.level = 0.98)
+     #var pobl A / var pobl B está en (0.2687046, 5.1930508)
+     
+     #---------- foto moragón (está mñas simplificado------
+     
+    
+     
+#---------OTRA OPCIÓN MIRAR CHULETARIO----------
+     #Ratio de varianzas muestrales --> fisher
+     
+  #Varianzas: 24 y 18
+  ratio =24/18
+  
+  #Calcular los cuantiles de la F de Snedecor
+     #0.01 --> alpha/2 (cada cola 0.01)
+     #df => muestras - 1 grado de libertad
+  cuantiles = c(  
+      qf(0.99, df1=16-1, df2=10-1), 
+      qf(0.01, df1=16-1, df2=10-1) 
+  )
+  
+   
+  print("
+        los datos no aportan evidencia de q las varianzas sean distintas
+        (1 está contenido en el intervalo)
+        Luego como A es mucho más barato que B, la empresa debería elegir A
+        
+        ")
+  
+```
+
+--- 
+
+Ejercicio Extra:
+¿Hay evidencia de que la var_A sea al menos dos veces mayor que la var_B?
+```{r}
+#HIPOTESIS
+  #Ha: sigma_a > 2 * sigma_b
+  #Ha: sigma_a^2 / sigma_b^2 > 2
+
+var.test(sims_a,sims_b, alternative = "greater", ratio=2)
+
+```
+
+
+
+Resuelve el mismo ejercicio empleando haciendo los cálculos del IC y del 
+p-valor "a mano".
+
+```{r}
+# ??
+```
+
+
+### !Kung y varianzas
+Usa un test de ratio de varianzas para discutir si es razonable asumir 
+igualdad de varianzas en el ejercicio de los !Kung (¿Existe evidencia de que 
+las varianzas por sexo son distintas?)
+
+```{r}
+# ??
+```
+

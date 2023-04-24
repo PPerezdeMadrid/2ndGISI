@@ -1,0 +1,161 @@
+---
+title: "examen_modelo"
+output: html_document
+date: "2023-01-06"
+---
+
+En una fiesta, cada individuo tiene una copa con su nombre. Snedecor deja su copa sobre una mesa libre y, tras un rato, se encuentra con que encima de la mesa hay n copas y que ya no sabe cuál es la suya. Snedecor tiene que ir mirando una por una cada copa para ver cu´al es la suya (con cuidado de ir apartando las copas que ya ha comprobado). Sabiendo que con una probabilidad p la copa se la ha llevado previamente otra persona por error, razona detalladamente cu´al es probabilidad de que Snedecor compruebe m´as de k copas (si Snedecor encuentra su copa al k-´esimo intento este no ser´ıa un “suceso exitoso” porque no ha comprobado m´as de k copas). Pista: razona por casos.
+
+DOS OPCIONES: 
+a) la copa no está: p 
+b) la copa sí está: 1-p 
+    casos_totales = (1-p)*n!
+    casos_fav{
+    1: elegir posicion copa: k-1
+    2: elegir posiciones resto de copas: (n-1)!
+}
+```{r}
+#Acierto: q no lo haya encontrada
+#ordenar n pasos en en posiciones: n!
+#1-p*n! (si entra en el else es 1-p) 
+#fav cases: 
+  #1) elegir una posicion: k-1
+
+```
+
+
+```{r}
+#Casos de fallos hasta r-ésimo acierto -->Binomal(r,p) 
+  # r--> hasta k ; p_n--> 1/n ó p--> prob de q se la haya llevado otra persona
+  #P(X<k) --> pbinom(k, n, 1/n)
+
+#Vuelve y hay 10 copas, comprueba hasta 7 copas
+n=10
+k=3
+#P(X<k)
+pnbinom(k, n, 1/n)
+
+p=0.3 #prob de q algn la haya cogido es de 30%
+
+prob_total = (1-p) * pnbinom(k-1, n, 1/n)
+prob_total
+```
+Una casa farmac´eutica es capaz de producir una determinada pastilla de una forma muy precisa. Esto es,el peso de las pastillas producidas tiene una desviaci´on est´andar muy peque˜na. El equipo de investigaci´on de la empresa ha propuesto un nuevo m´etodo de producci´on del f´armaco. Sin embargo, esto conlleva algunos costes y se adoptar´a solo si hay pruebas s´olidas de que la desviaci´on est´andar del peso de los art´ıculos caer´a por debajo de 0.4 miligramos (mg) con el nuevo m´etodo (¡mejor que la precisi´on actual!). Se produce una muestra de 10 medicamentos con el nuevo m´etodo obteni´endose que los medicamentos tienen una media de 5.724 mg y una desviaci´on dest´andar de 0.35 mg. Con un nivel de significaci´on del 1 %, ¿hay evidencia que apoye la adopci´on del nuevo m´etodo?
+
+```{r}
+source("utils.r")
+metodoNuevo = rnorm(10, mean= 5.724, sd=0.35)
+#-------------VARIANZA MUESTRAL------------
+  #H0: var > 1.6
+  #Ha: var < 1.6
+
+  #Estadístico --> Chi cuadrado
+  #0.005- 0.99 -0.005
+  z = c(qchisq(0.005, df = 9), qchisq(0.995, df = 9))
+  #P(z < 9*var(metodoNuevo)/sigma2 < z) = 0.99
+  var_muestral = var(metodoNuevo)
+  sigma2 = 9*var_muestral/(z)
+  sigma2 < 1.6
+  print("es menor que 0.4")
+  
+```
+ Gertrude Cox va todos los d´ıas al banco. En el banco hay dos colas, una cola est´andar y una cola prioritaria. Independientemente del n´umero de personas en el banco, la cola est´andar tiene un tiempo medio de espera de 10 minutos, mientras que la prioritaria tiene un tiempo medio de espera de 5 minutos. Desgraciadamente, el banco est´a intentando ahorrar costes y solo abre ocasionalmente la cola prioritaria. Cada d´ıa se decide si se abre la cola prioritaria con independencia de lo que haya sucedido en d´ıas anteriores. La probabilidad de abrir la cola prioritaria es 0.7. Gertrude es cliente VIP, as´ı que tiene derecho a usar la cola prioritaria. Si Gertrude va al banco y encuentra la cola prioritaria abierta se pone en ella, en otro caso usa la cola est´andar. 
+ 
+ *(a) Sabiendo que los tiempos de espera se pueden modelar con una distribuci´on exponencial, obt´en la distribuci´on del tiempo de espera (diario) de Gertrude. 
+ *(b) Calcula la probabilidad de que Gertrude tenga que esperar m´as de 4 minutos en una visita al banco. 
+ *(c) Calcula la probabilidad de que, en 7 visitas al banco, Gertrude sea atendida en menos de 4 minutos en tres ocasiones (Si no has logrado acabar (b), usa 0.1 como probabilidad de que Gertrude sea atendida en menos de 4 minutos).
+
+```{r}
+# 0.7 vip y 0.3 estandar
+# dexp(labmda) --> media = 1/labmda
+tiempo_espera = function(x) 0.7 * dexp(x,1/5) + 0.3*dexp(x,1/10)
+tiempo_espera(10)
+
+plot(0:30, tiempo_espera(0:30))
+
+#P(X>4) = 1 - P(X<4) 
+1 - (0.7*pexp(4, 1/5) + 0.3*pexp(4, 1/10))
+
+#En 7 días;
+N=1000
+sims = replicate(N, {
+   estandar =  sum(rexp(7, 1/5) < 4)/7
+   vip = sum(rexp(7,1/10)<4)/7
+   0.3*estandar + 0.7*vip
+})
+
+mean(sims)
+      
+  
+
+```
+
+. En cierto cl´uster de computaci´on se ejecutan en paralelo tres tipos de trabajos: A, B y C. Sean Xa, Xb y Xc los tiempos que transcurren hasta que cada uno de estos trabajos se terminan de ejecutar. Todos los trabajos empiezan en el mismo instante de tiempo. Por otra parte, los “tiempos de ejecuci´on”son independientes entre s´ı y tienen distribuciones exponenciales con par´ametros respectivos λa = 2, λb = 3 y λc = 5. Sea M el instante de tiempo en que el todos los trabajos se han completado. Escribe el c´odigo R para comprobar mediante simulaciones (no est´a permitido usar las funciones estad´ısticas dxxx, qxxx o pxxx) si la distribuci´on de M tiene distribuci´on exponencial de par´ametro 0.95. Para ello, procede comosigue:
+ 
+Simula muchas muestras de la variable M.
+Dibuja la distribuci´on de las muestras simuladas...
+... y comp´arala con la distribuci´on te´orica (a˜nadiendo una segunda curva al plot original).
+
+```{r}
+source("utils.R")
+#Xa: tiempos que transcurren hasta finalizar trabajo A (2)
+#Xb: tiempos que transcurren hasta finalizar trabajo B  (3)
+#Xc: tiempos que transcurren hasta finalizar trabajo C  (5)
+
+#M: #tiempo en el que terminan los trabajos = max(a,b,c)
+n=100
+trabajoA = rexp(n, 1/2)
+a_ordenado = sort(trabajoA)
+plot(1:100, a_ordenado)
+trabajoB = rexp(n, 1/3)
+trabajoC = rexp(n,1/5)
+print("")
+
+pmax(mean(trabajoA) , mean(trabajoB))
+
+library("ggplot2")
+hist(trabajoA)
+hist(trabajoB, add = TRUE)
+hist(trabajoC, add = TRUE) #más tiempo
+
+
+
+simsM = rexp(n, 1/0.95)
+hist(simsM)
+
+#distribución teórica
+
+
+```
+
+
+El conjunto de datos “iris.csv” contiene datos sobre los tama˜nos de p´etalo y s´epalo de tres especies de iris. Una pregunta que interesa a los bot´anicos es si el tama˜no del s´epalo depende del tama˜no del p´etalo y de la especie (c´entrate solo en las variables Sepal.Length, Petal.Length y Species). Crea un modelo ANCOVA siguiendo los siguientes pasos:
+
+*(a) Carga y visualiza los datos para valorar si el modelo debe incluir interacciones. Escribe claramente
+tus conclusiones.
+*(b) Crea el modelo y obt´en los intervalos de confianza para los coeficientes y su significaci´on.
+*(c) Interpreta los coeficientes y escribe tus conclusiones.
+*(d) Valora si las asunciones del modelo se cumplen.
+
+```{r}
+source("utils.R")
+library("ggplot2")
+library(readr)
+iris <- read_csv("iris.csv")
+#View(iris)
+
+#Sepal.Length ~Petal.Length + Species
+ggplot(iris, aes(x=Sepal.Length, y =Petal.Length, col = Species))+ geom_boxplot()
+ggplot(iris, aes(x=Sepal.Length, y =Petal.Length, col = Species))+ stat_summary() +
+  stat_summary(geom = 'line', aes(y=Petal.Length))
+
+print("concluimos q no hay interacciones")
+
+my_model = lm(Sepal.Length ~Petal.Length + Species, iris)
+summary(my_model)
+confint(my_model)
+```
+
+
+
+

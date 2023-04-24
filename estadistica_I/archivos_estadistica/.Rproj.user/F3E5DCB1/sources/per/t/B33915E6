@@ -1,0 +1,27 @@
+{
+    "id": "B33915E6",
+    "path": "~/Desktop/2ndo_carrera/estadistica_I/archivos_estadistica/covid19_statements.R",
+    "project_path": "covid19_statements.R",
+    "type": "r_source",
+    "hash": "2445927119",
+    "contents": "",
+    "dirty": false,
+    "created": 1663652901584.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "214,1",
+        "scrollLine": "208",
+        "notebook_format": "html_document"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1663397797,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1663397797,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,205 @@
+---
+title: "Intervalos de confianza y test de hipótesis para dos poblaciones normales"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Comparaciones de medias en poblaciones normales
+## Varianzas totalmente desconocidas
+
+### Diferencias por sexos
+Los datos contenidos en "howell1.csv" son datos censales parciales del
+área !Kung San compilados a partir de entrevistas realizadas a finales de la década
+de 1960. ¿Depende la altura de los !Kung adultos del sexo del inviduo? ($\alpha=0.01$). 
+
+Apoya tus resultados con un gráfico y calcula el tamaño del efecto. Emplea 
+los datos en "howell1.csv".
+
+IMPORTANTE:
+*ADULTOS --> +18
+*Utilizar geom_density()
+*3 asunciones: distrib normal, indep entre x e y, indep para x e y (poblacion infinita)
+
+```{r}
+library(readr)
+howell1 <- read_delim("data_3/data_3/howell1.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+#View(howell1)
+
+#¿depende la altura del sexo?
+  #1º) Formular hipótesis
+    #H0: mu_mujer = mu_hombre
+    #Ha: mu_mujer != mu_hombre 
+
+  #2º) Estadísitico: 
+      #Media muestral con varianza desconocida --> T de Student 
+      library("ggplot2")
+      #filtar los datos --> adultos
+      h_adult = howell1[howell1$age >= 18,]
+      ggplot(h_adult, aes(x = height)) + geom_histogram(bins = nclass.FD(howell1$height))
+      # Es normal
+      #indep de muestras para x e y --> población infinita
+      #indep entre X e Y --> la altura de la mujer no depende de la del hombre
+      
+  #3º) Visualizar
+      #filtar los datos --> adultos
+      howell1$male = as.factor(howell1$male)
+      ggplot(h_adult, aes(x=height, col = male)) + geom_density()
+      
+  #4º) Realizar los test 
+       #Ha: mu_mujer != mu_hombre --> mu_mujer-mu_hombre != 0 <<< DOS COLAS  
+      
+      h_adult$male = as.factor(h_adult$male) #IMPORTANTÍSIMO
+      men = h_adult[h_adult$male == 1, ]
+      women = h_adult[h_adult$male == 0, ]
+
+      # xxxxxx my_test = t.test(height~male, h_adult,  conf.level=0.99)
+      my_test =t.test(men$height, women$height, alternative = "two.sided", mu = 0)
+      my_test
+      print("puesto que el pvalor es pequeño, apoyamos la hipotesis alternativa")
+      print("hombres tienen una altura de entorno a 9.67-12.02 cm más q las mujeres")
+      
+  #5º) Tamaño del efect
+      library("effectsize")
+      effectsize(my_test)
+      
+      print("segun el enlace, el tamaño del efecto es grande")
+      print("los resultados son MUY relevantes")
+      
+      print("un-pooled sd : desv típica no agrupada")
+      print("solos si sd_y = sd_x --> uso de n_x y el n_y")
+
+
+```
+
+
+## Varianzas desconocidas pero iguales
+### Varianzas desconocidas pero iguales
+Repite el ejercicio relativo a los !Kung adultos si se puede asumir que 
+la desviación típica poblacional para hombres y mujeres es la misma 
+($\sigma_h = \sigma_m$).
+
+```{r}
+#VAR.EQUAL = TRUE --> varianza es la misma --> = desv tipica
+
+test2 = t.test(men$height, women$height, alternative="two.sided", var.equal = TRUE)
+test2
+effectsize(test2)
+```
+
+
+## Datos apareados
+### Datos apareados
+Unos científicos examinaron la función de la vesícula biliar antes y 
+después de una cirugía  para detener el reflujo. Los autores midieron 
+la funcionalidad de la vesícula biliar calculando la fracción de eyección de
+la vesícula biliar (GBEF) antes y después de la operación. El objetivo de la 
+operación es aumentar la GBEF. ¿Hay evidencia para concluir que la operación 
+aumenta el GBEF? Datos en "gbef\_long.txt" (o "gbef.txt", para un reto).
+
+```{r}
+library(readr)
+gbef_long <- read_table("data_3/data_3/gbef_long.csv")
+#View(gbef_long)
+
+#1º) FORMULAR LAS HIPÓTESIS
+    #H0: mu_postop < preop --> mu_postop - mu_preop<>0
+    #Ha: mu_postop > preop --> mu_postop - mu_preop >0
+
+#2º) ASUNCIONES
+      preop = gbef_long[gbef_long$`"class"`=="\"Preop\"" , ]
+      postop = gbef_long[gbef_long$`"class"`== "\"Postop\"" , ]
+      
+      diff_postpre = postop$`"gbef"` - preop$`"gbef"`
+      
+      #3 asunciones:
+        # *Sigue una distribucion normal
+            hist(diff_postpre)
+        # *indep entre x e y --> NO SON DATOS APAREADOS
+        # *indep de muestras --> 24<<<<< población dirigida
+            
+#3º) Test
+                
+     test_gbef =  t.test(postop$`"gbef"`, preop$`"gbef"`, paired = TRUE, alternative = "greater" ,mu = 0)  
+      t.test(diff_postpre, alternative = "greater", mu = 0)
+
+#4º) tamñao del efecto 
+     library("effectsize")
+      effectsize(test_gbef)
+      
+      print("tamaño del efecto es pequeño, muestras son POCO relevantes")
+      
+#5º) ¿Cuantas muestras?
+      power.t.test( delta =  18.075, #media del t.test
+                    sd = sd(diff_postpre),
+                    sig.level = 0.01,
+                    power=0.9,
+                    alternative = "one.sided")
+      print("se recomienda hacer 87 muestras")
+                    
+
+
+
+```
+
+# Comparaciones de varianzas
+
+### Comparaciones de varianzas
+En una empresa, se están comparando dos métodos de producción de cierto chip 
+(A, mucho más barato, y B). La potencia media consumida por ambos chips es 
+idéntica, si bien los dos métodos tienen distinta variabilidad. Se obtienen 
+dos muestras de tamaño 16 y 10 y sus varianzas muestrales son
+$24$ y $18$ (en Watts$^2$). Usando un nivel de confianza del 98\%, ¿qué método 
+es preferible? Usa la función *var.test*.
+
+```{r}
+# Comparaciones de varianzas --> ratio de varianzas D de Snecor
+
+#POR ESTUMACIÓN DE SIMUALCIONES
+# simular los datos --> suponemos Distribucion normal
+    metodoA = rnorm(16, sd=sqrt(24))
+    metodoB = rnorm(18, sd= sqrt(18))
+    
+    #ESTIMACIÓN
+    simsA_z = (metodoA - mean(metodoA))/(sd(metodoA)*sqrt(24))
+    simsB_z = (metodoB - mean(metodoB))/(sd(metodoB) * sqrt(18))
+    
+    var.test(simsA_z, simsB_z, conf.level = 0.98)
+      #sigmaA/sigmaB está entre  0.2264702 2.5892313 --> mayor a uno
+      #sigmaA es mejor q sigmaB
+  
+#POR F DE SNECOR 
+    ratio = 24/18
+    #buscar un cuantil: 0.01-0.98 - 0.01
+    #df => muestras - 1 grado de libertad
+     cuantiles = c(
+      a = qf(0.01, 16-1, 10-1 ),
+      b = qf(0.99, 16-1, 10-1 )
+     )
+      
+    intervalo_confianza = ratio/cuantiles
+
+```
+
+--- 
+
+Resuelve el mismo ejercicio empleando haciendo los cálculos del IC y del 
+p-valor "a mano".
+
+```{r}
+# ??
+```
+
+
+### !Kung y varianzas
+Usa un test de ratio de varianzas para discutir si es razonable asumir 
+igualdad de varianzas en el ejercicio de los !Kung (¿Existe evidencia de que 
+las varianzas por sexo son distintas?)
+
+```{r}
+# ??
+```
+

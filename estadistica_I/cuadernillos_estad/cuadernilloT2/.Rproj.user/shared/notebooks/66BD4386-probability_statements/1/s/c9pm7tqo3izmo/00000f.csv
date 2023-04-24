@@ -1,0 +1,6 @@
+"0","  print((factorial(20) / (factorial(11)*factorial(9)))/(factorial(25)/(factorial(15)*factorial(10))))
+"
+"1","[1]"
+"1"," 0.0513834"
+"1","
+"

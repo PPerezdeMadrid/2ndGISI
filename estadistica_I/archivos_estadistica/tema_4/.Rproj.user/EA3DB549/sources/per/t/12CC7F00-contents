@@ -1,0 +1,119 @@
+---
+title: "Intervalos de confianza y test de hipótesis para dos poblaciones normales"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Datos no-normales
+### Fútbol y Poisson
+Bajo ciertas condiciones, el número de goles marcados en un partido de fútbol 
+se puede aproximar por una distribución de Poisson. El fichero "spain_league.csv"
+contiene datos sobre la liga de fútbol española. Para hacer tus apuestas deportivas,
+es importante saber el número de goles promedio por equipo en cada partido. Usando
+los resultados de la liga 21-22, construye un intervalo de confianza
+del 98\% para el promedio de goles del equipo local en un partido.
+
+
+ X: numero de goles en un partido
+ X~P(lambda)
+ donde lambda es numero medio de goles por partido
+ 
+ lamda = E[X] ---> mean()
+ 
+ Teorema central del límite: x1, x2, ... xn [Todos son independientes]
+ "x+ x2 + ... xn es aproximadamente normal"
+ E[X1 + X2 + ...Xn] = E[X1]+ ... E[Xn] = n * lambda
+ Var[X1 + X2 + ...Xn] = (son indep) Var[X1]+ ... Var[Xn]= n * lambda
+ 
+ x+ x2 + ... xn ~Normal(n* lambda, varianza = n* lambda)
+ media muestral: x+ x2 + ... xn / n ~Normal(lambda, varianza = lambda/n) 
+                                      (las constantes salen elevadas al cuadrado !!!)
+ 
+ 
+```{r}
+library("tidyverse")
+library("effectsize")
+
+library(readr)
+spain_league <- read_csv("data_4/data_4/spain_league.csv")
+spain_2021 = spain_league[spain_league$Season==2021, ]
+
+goles_local = spain_2021$hgoal 
+#Porque no usar los vgoal? para que sean independientes
+lamda_est = mean(goles_local)
+
+lamda_est + z *sqrt(lamda_est/length(goles_local))
+#Calcular cuantiles
+z = c(z1 = qnorm(0.01), z2 = qnorm(0.99))
+lamda_est + z *sqrt(lamda_est/length(goles_local))
+
+#Calcular usando table la distribucion de goles
+# usando dpois, que poisson es una buena aproximación
+
+```
+
+
+# Datos tabulares
+## Racismo en la selección de jurados
+Durante los 60s-70s, se dieron casos de racismo en la elección de jurados
+populares. Supuestamente, la elección es al azar entre un listado de todos los
+ciudadanos. Sin embargo, se daban situaciones como que en una preselección de 80
+posibles jurados solo 4 fuesen afroamericanos (de una población con un 50\% de
+afroamericanos). Datos en "juries.csv". Las autoridades se defendían diciendo
+que era pura casualidad. ¿Es esto creíble? Apoya tus conclusiones con gráficos.
+
+X: nº de afroamericanos en la preselección del jurado
+X~B(80, p=0.5)
+
+Ha: p < 0.5 (son racistas)
+H0: p = 0.5
+prop.test(x[vector de éxitos], n[muestras], p[vector de probabilidades])
+
+
+```{r}
+prop.test(4,80, alternative="less", p=0.5)
+
+print("El p-valor es casi 0 , son racistas
+      los datos apoyan la hipótesis alternativa")
+
+print("la propabilidad de la selección de un afroamericano es menor a 11%")
+
+```
+
+
+### A/B testing
+Una página web de venta de productos ha estudiado el número de conversiones de
+su página web actual (conversión $=$ el usuario hace click en ``comprar ahora'').
+Para aumentar el número de conversiones, rediseña el aspecto de su página web en
+base a *heatmaps*.  La nueva página se prueba con un nuevo conjunto de usuarios,
+midiendo el número de conversiones. Datos en "ab_testing.csv". ¿Se puede 
+concluir que la nueva página incrementa el número de conversiones? 
+Apoya tus conclusiones con un gráfico.
+
+COMPARACIÓN DE BINOMIALES
+
+Ha: num de cliks en new > num cliks en old
+      p_nueva > p_vieja
+      
+N: num de cliks de la pagina nueva B~(n_nueva, p_nueva)
+V: num de clicks pagina vieja B~(n_vieja, p_vieja)
+```{r}
+library(readr)
+ab_testing <- read_csv("data_4/data_4/ab_testing.csv")
+
+ttt=table(ab_testing)
+exito_new = ttt[1,2]
+exito_old= ttt[2,2]
+vec_x = c(exito_new, exito_old)
+prop.test(vec_x, rowSums(ttt), alternative = "greater")
+
+print("la propabilidad de conversión en la página nueva es al menos
+      un 3% superior a la página vieja (95%). Debemos cambiar el diseño")
+
+print("dado que el pvalor es casi cero, acogemos la hipótesis alternativa")
+```
+

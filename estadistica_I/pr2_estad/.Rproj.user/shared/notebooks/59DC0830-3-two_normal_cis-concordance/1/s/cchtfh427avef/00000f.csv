@@ -1,0 +1,57 @@
+"0","# ??"
+"0","library(""tidyverse"")"
+"2","Warning: package ‘tidyverse’ was built under R version 4.2.2"
+"2","Registered S3 methods overwritten by 'dbplyr':
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      
+"
+"2","── [1mAttaching packages[22m ──────────────────────────────────────────────── tidyverse 1.3.2 ──"
+"2","[32m✔[39m [34mggplot2[39m 3.4.0      [32m✔[39m [34mdplyr  [39m 1.0.10
+[32m✔[39m [34mtibble [39m 3.1.8      [32m✔[39m [34mstringr[39m 1.4.1 
+[32m✔[39m [34mtidyr  [39m 1.2.1      [32m✔[39m [34mforcats[39m 0.5.2 
+[32m✔[39m [34mpurrr  [39m 0.3.5      "
+"2","Warning: package ‘ggplot2’ was built under R version 4.2.2"
+"2","Warning: package ‘tibble’ was built under R version 4.2.2"
+"2","Warning: package ‘tidyr’ was built under R version 4.2.2"
+"2","Warning: package ‘purrr’ was built under R version 4.2.2"
+"2","Warning: package ‘dplyr’ was built under R version 4.2.2"
+"2","Warning: package ‘stringr’ was built under R version 4.2.2"
+"2","Warning: package ‘forcats’ was built under R version 4.2.2"
+"2","── [1mConflicts[22m ─────────────────────────────────────────────────── tidyverse_conflicts() ──
+[31m✖[39m [34mdplyr[39m::[32mfilter()[39m masks [34mstats[39m::filter()
+[31m✖[39m [34mdplyr[39m::[32mlag()[39m    masks [34mstats[39m::lag()"
+"0","library(""effectsize"")"
+"2","Warning: package ‘effectsize’ was built under R version 4.2.2"
+"0","#renombramos cambiando su extension a csv + delimitador a whitespace"
+"0","library(readr)"
+"0","gbef_long <- read_table(""C:/Users/ppere/Desktop/2ndo_carrera/estadistica_I/archivos_estadistica/tema_4/data_3(1)/data_3/gbef_long.csv"") "
+"2","
+[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────────[39m
+cols(
+  `""ID""` = [31mcol_character()[39m,
+  `""class""` = [31mcol_character()[39m,
+  `""gbef""` = [32mcol_double()[39m
+)
+"
+"0","colnames (gbef_long)= c(""ID"", ""class"", ""gbef"") #Quitar dobles comillas"
+"0",""
+"0","# X:""antes de operarse"""
+"0","# Y: ""después de operarse"""
+"0","# Son dependientes, el gbef antes depedende del gbef de después"
+"0",""
+"0","#3 Asunciones:"
+"0","#   - Indep entre si [NO se cumple]"
+"0","#   - Muestreo dentro de cada poblacion es aleatorio (pobl inf)"
+"0","#   - NOrmalidad de las poblaciones"
+"0",""
+"0"," "
+"0","#------Es un caso especial: datos apareados---------"
+"0","# Medimos algo --> hacemos algo --> repetimos"
+"0",""
+"0","#tengo dos medidas para el individuo--> vamos a crear otra variable"
+"0","gbef_long_preop = gbef_long[gbef_long$class ==""\""Preop\"""", ] "
+"0","gbef_long_postop = gbef_long[gbef_long$class ==""\""Postop\"""", ]"
+"0",""
+"0","dif_despues_antes = gbef_long_postop$gbef - gbef_long_preop$gbef #resta de gbef"
+"0","hist(dif_despues_antes)"

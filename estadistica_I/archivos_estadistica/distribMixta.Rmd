@@ -1,0 +1,160 @@
+---
+title: "distribMixtas"
+output: html_document
+date: "2023-01-09"
+---
+
+## Trabajamos para una gran compañía de streaming que quiere hacer sugerencias 
+## de películas a sus usuarios. Para hacer esto, hay que intentar caracterizar 
+## los gustos de cada usuario. Asumimos que las películas que ve un usuario 
+## únicamente dependen de dos rasgos de su caracter: su ``aventurosidad (X)'' y su 
+## ``romanticismo (Y)''. Asumimos que ambos rasgos se pueden caracterizar con 
+## $X\sim \mathbb{U}[0, 1]$ y $Y~\sim\mathbb{U}[0, 1]$ (independientes). Si un 
+## usuario tiene  como rasgos $X=x$ e $Y=y$:
+
+## * La probabilidad de ver una película de acción es $p_a = \frac{2 x - y + 1}{6}$. 
+## * La probabilidad de ver una película romántica es $p_r = \frac{3y - 2x + 2}{10}$
+## * La probabilidad de ver una película de acción-amor es $p_{ar} = 1 - p_a - p_r$. 
+
+## De las últimas 20 películas que ha visto un usuario, 4 han sido de acción,
+## 4 románticas y 12 de acción-amor. ¿Cuáles son sus rasgos X e Y más probables?
+
+```{r}
+source("utils.R")
+
+# X ~ U(0, 1)
+# Y ~ U(0, 1)
+# (nueva variable) Z: nº de pelis accion       
+# (nueva variable) A: nº de pelis romanticas   
+# (nueva variable) M: nº de pelis accion-amor 
+p_a = function(x,y){
+  (2*x-y+1)/6
+}
+
+p_r = function(x,y){
+  (3*y - 3*x + 2)/10
+}
+
+p_m = function(x,y){
+  1 - p_a(x,y) - p_r(x,y)
+}
+
+#¿Que queremos saber? --> f(x,y|a=4, r=4, m=12)
+  #f(x,y|a=4, r=4, m=12) = f(x,y,a,r,m)/f(a,r,m)
+
+#1) f(x,y,a,r,m) --(indep)--> f(x)*f(y)*f(a,r,m)
+    #f(x) = dunif(x) [por defecto 0,1]
+    #f(y)=dunif(y)
+    #f(a,r,m) = dmultinom(c(a,r,m), 20, probabilidades)
+f_xyarm = function(x,y,a,r,m){
+  probabilidades = c(p_a, p_r, p_m)
+  dunif(x)*dunif(y)*dmultinom(c(a,r,m), 20, probabilidades)
+}
+
+#2) Marginalizar para obtener f(a,r,m)
+
+f_arm = function(a1,r1,m1){
+   integrate2_dydx(f_xyarm(x,y,a1,r1,m1), 
+                from_x = 0 , to_x = 1,
+                from_y =  function(x) 0, to_y = function(x) 1)
+}
+
+
+  
+
+#3) Hallar f(x,y|a,r,m)
+
+f_xy_given_arm = function(x,y){
+  f_xyarm(x,y,4,4,12)/ f_arm(4,4,12)
+}
+```
+
+
+-----------ejercicio simulacro------------------
+2.3. (2.5 puntos) (25 minutos) [Problema con simulaciones → Sube al portal ajedrez.R] En un torneo de ajedrez participan 20 personas con los que se forman 2 grupos de 10 personas (grupos A y B).Entre estas personas hay 8 mucho mejores que los dem´as.
+
+(a) (1.25 puntos) Calcula la probabilidad de que haya al menos 3 personas “buenas” en cada uno de los grupos. Emplea simulaciones.
+
+(b) (1.25 puntos) Si sabemos que el grupo A tiene al menos 3 personas “buenas”, ¿cu´al es la probabilidad de que todas las personas buenas est´en en el grupo A? Calcula esta probabilidad con
+simulaciones.
+
+```{r}
+#A: num de jugadores buenos en el equipo A
+#B: num de jugadires buenos en el equipo B
+
+#a) P(X>=3, Y>=3) en cada equipo
+N=100
+sims = replicate(N, {
+  jugadores= sample(c(rep(0,12), rep(1,8)))
+  equipoA = jugadores[1:10]
+  equipoB = jugadores[11:20]
+  
+  condA = sum(equipoA)>2
+  condB = sum(equipoB)>2
+  
+  condB&condA
+  })
+
+mean(sims)
+
+#b)P(B=0|A>2)
+  # = P(B=0, A>2) / P(A>2)
+  
+  #1) P(B=0, A>2)
+    N1 = 5000
+    sims1 = replicate(N1,{
+        jugadores= sample(c(rep(0,12), rep(1,8)))
+        equipoA = jugadores[1:10]
+        equipoB = jugadores[11:20]
+        
+        condA = sum(equipoA)>2
+        condB = sum(equipoB)== 0
+        
+        condB&condA
+       })
+    p_b0a2 = sum(sims1)/N
+    
+    #2) P(A<2)
+    sims2 = replicate(N1, {
+        jugadores= sample(c(rep(0,12), rep(1,8)))
+        equipoA = jugadores[1:10]
+        sum(equipoA)>2
+        })
+    p_a2 = mean(sims2)
+    
+    #3) P(B=0|A>2) = P(B=0, A>2) / P(A>2)
+     p_b0a2/p_a2
+
+```
+---------------ejercicio lámparas-----------
+num 8 de tests
+vida media muestra1: 1570h
+mu != 1600 
+X:"duración de una bombilla" (Asumir q es normal ~N(mu, sigma2))
+H0: mu = 1600
+Ha: mu != 1600
+¿Cuántas muestras necesitamos para q la variacion sea de 30h?
+puedes asumir que la desv poblacional es de 120h
+0.1 y potencia 0.9
+
+
+```{r}
+#sin saber cuanto vale la desv poblacional
+power.t.test(delta = 30,  #diferencia de medias --> 30h
+             sd = , #desv típica muestral q la sacaremos de sd(muestras)
+             sig.level = 0.01,
+             power = 0.9,
+             type = "one.sample", 
+             alternative = "two.sided")
+
+#sabiendo cuanto vale la desv poblacional
+power.t.test(delta = 30,  #diferencia de medias --> 30h
+             sd = 120, 
+             sig.level = 0.01,
+             power = 0.9,
+             type = "one.sample", 
+             alternative = "two.sided")
+```
+
+
+
